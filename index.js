@@ -1,6 +1,8 @@
 import express from 'express';
 import { PrismaClient } from '@prisma/client';
-import userRoutes from './routes/userRoutes.js'; // Ensure .js extension for ES modules
+import userRoutes from './routes/userRoutes.js';
+import postRoutes from './routes/postRoutes.js';
+import workoutPlanRoutes from './routes/workoutPlanRoutes.js';
 
 const app = express();
 const prisma = new PrismaClient();
@@ -12,6 +14,10 @@ app.get('/', (req, res) => {
 });
 
 app.use('/api/users', userRoutes);
+
+app.use('/api/posts', postRoutes);
+
+app.use('/api/workoutplans', workoutPlanRoutes);
 
 app.use((err, req, res, next) => {
   console.error(err.stack);

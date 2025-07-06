@@ -6,43 +6,47 @@ import prisma from '../prismaClient.js';
  * GET user by username
  */
 export const getUserByUsername = async (req, res) => {
-  const { username } = req.params;
+    const { username } = req.params;
 
-  try {
-    const user = await prisma.user.findUnique({
-      where: { username },
-      select: {
-        id: true,
-        username: true,
-        name: true,
-        email: true,
-        createdAt: true,
-        profile: {
-          select: {
-            bio: true,
-            isPrivate: true
-          }
-        },
-        followedBy: {
-          select: {
-            followedById: true
-          }
-        },
-        following: {
-          select: {
-            followingId: true
-          }
+    try {
+      const user = await prisma.user.findUnique({
+        where: { username },
+        select: {
+          id: true,
+          username: true,
+          name: true,
+          email: true,
+          createdAt: true,
+          workouts: { select: { id: true } },
+          profile: {
+            select: {
+              bio: true,
+              isPrivate: true
+            }
+          },
+          followedBy: { select: { followedById: true } },
+          following: { select: { followingId: true } }
         }
+      });
+  
+      if (!user) {
+        return res.status(404).json({ error: 'User not found' });
       }
-    });
-
-    if (!user) return res.status(404).json({ error: 'User not found' });
-
-    res.json(user);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Failed to fetch user' });
-  }
+  
+      const workoutCount = user.workouts?.length || 0;
+      const followerCount = user.followedBy?.length || 0;
+      const followingCount = user.following?.length || 0;
+  
+      res.json({
+        ...user,
+        workoutCount,
+        followerCount,
+        followingCount
+      });
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: 'Failed to fetch user' });
+    }
 };
 
 /**
