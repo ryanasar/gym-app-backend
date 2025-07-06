@@ -1,0 +1,169 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           Int           @id @default(autoincrement())
+  email        String        @unique
+  name         String?
+  username     String        @unique
+  workouts     Workout[]
+  createdAt    DateTime      @default(now())
+  profile      Profile?
+  workoutPlans WorkoutPlan[]
+  followedBy   Follows[]     @relation("followedBy")
+  following    Follows[]     @relation("following")
+  achievements Achievement[]
+  posts        Post[]        @relation("UserPosts")
+  comments     Comment[]
+  likes        Like[]
+
+  @@index([username])
+}
+
+model Follows {
+  followedBy   User @relation("followedBy", fields: [followedById], references: [id], onDelete: Cascade)
+  followedById Int
+  following    User @relation("following", fields: [followingId], references: [id], onDelete: Cascade)
+  followingId  Int
+
+  @@id([followingId, followedById])
+}
+
+model Profile {
+  id        Int     @id @default(autoincrement())
+  bio       String?
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    Int     @unique
+  isPrivate Boolean
+}
+
+model WorkoutPlan {
+  id          Int          @id @default(autoincrement())
+  userId      Int
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  isPublic    Boolean
+  numDays     Int
+  workoutDays WorkoutDay[]
+  likes       Like[]
+  comments    Comment[]
+  Post        Post[]
+
+  @@index([userId])
+}
+
+model WorkoutDay {
+  id            Int          @id @default(autoincrement())
+  dayIndex      Int
+  isRest        Boolean
+  workoutId     Int?
+  workout       Workout?     @relation(fields: [workoutId], references: [id], onDelete: SetNull)
+  workoutPlanId Int?
+  WorkoutPlan   WorkoutPlan? @relation(fields: [workoutPlanId], references: [id], onDelete: Cascade)
+}
+
+model Workout {
+  id           Int           @id @default(autoincrement())
+  title        String
+  notes        String?
+  userId       Int
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  exercises    Exercise[]
+  achievements Achievement[]
+  Post         Post[]
+  WorkoutDay   WorkoutDay[]
+
+  @@index([userId])
+}
+
+model Exercise {
+  id        Int              @id @default(autoincrement())
+  workoutId Int
+  name      String
+  sets      Int?
+  reps      Int?
+  weight    Int?
+  workout   Workout          @relation(fields: [workoutId], references: [id], onDelete: Cascade)
+  muscles   MuscleExercise[]
+
+  @@index([workoutId])
+}
+
+model Muscle {
+  id        Int              @id @default(autoincrement())
+  name      String           @unique
+  exercises MuscleExercise[]
+}
+
+model MuscleExercise {
+  muscleId   Int
+  exerciseId Int
+  muscle     Muscle   @relation(fields: [muscleId], references: [id], onDelete: Cascade)
+  exercise   Exercise @relation(fields: [exerciseId], references: [id], onDelete: Cascade)
+
+  @@id([muscleId, exerciseId])
+}
+
+model Achievement {
+  id        Int      @id @default(autoincrement())
+  workoutId Int?
+  userId    Int
+  workout   Workout? @relation(fields: [workoutId], references: [id], onDelete: SetNull)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  posts     Post[]
+
+  @@index([userId])
+}
+
+model Post {
+  id            Int          @id @default(autoincrement())
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  title         String
+  description   String
+  published     Boolean      @default(false)
+  authorId      Int
+  author        User         @relation("UserPosts", fields: [authorId], references: [id], onDelete: Cascade)
+  workoutId     Int?
+  workout       Workout?     @relation(fields: [workoutId], references: [id], onDelete: SetNull)
+  workoutPlanId Int?
+  workoutPlan   WorkoutPlan? @relation(fields: [workoutPlanId], references: [id], onDelete: SetNull)
+  achievementId Int?
+  achievement   Achievement? @relation(fields: [achievementId], references: [id], onDelete: SetNull)
+  likes         Like[]
+  comments      Comment[]
+
+  @@index([authorId])
+}
+
+model Comment {
+  id            Int          @id @default(autoincrement())
+  userId        Int
+  author        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  content       String
+  timestamp     DateTime     @default(now())
+  postId        Int?
+  post          Post?        @relation(fields: [postId], references: [id], onDelete: Cascade)
+  workoutPlanId Int?
+  WorkoutPlan   WorkoutPlan? @relation(fields: [workoutPlanId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model Like {
+  id            Int          @id @default(autoincrement())
+  userId        Int
+  author        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  timestamp     DateTime     @default(now())
+  postId        Int?
+  post          Post?        @relation(fields: [postId], references: [id], onDelete: Cascade)
+  workoutPlanId Int?
+  workoutPlan   WorkoutPlan? @relation(fields: [workoutPlanId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}

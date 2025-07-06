@@ -1,0 +1,44 @@
+# Node modules
+node_modules/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Environment variables
+.env
+.env.*
+
+# macOS system files
+.DS_Store
+
+# Build outputs
+dist/
+build/
+
+# Prisma generated files (client is okay to commit, migrations optionally)
+prisma/dev.db
+prisma/*.sqlite
+
+# If you want to ignore SQLite migrations (optional)
+# prisma/migrations/
+
+# Coverage outputs (if you use testing)
+coverage/
+
+# VSCode settings
+.vscode/
+
+# IDEs
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# OS generated files
+Thumbs.db
+
+# TypeScript build outputs (if using TypeScript)
+*.tsbuildinfo
+
+# Optional: lock f
