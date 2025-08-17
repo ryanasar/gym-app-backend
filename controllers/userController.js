@@ -2,6 +2,34 @@
 
 import prisma from '../prismaClient.js';
 
+
+export const getOrCreateUserBySupabaseId = async (req, res) => {
+    const { supabaseId } = req.params;
+    const { email }  = req.body;
+    
+    try {
+      const user = await prisma.user.findUnique({
+        where: { supabaseId },
+      });
+
+      if (!user) {
+        user = await prisma.user.create({
+          data: {
+            supabaseId,
+            email,
+          },
+        });
+      }
+      
+      
+      res.json(user);
+    } catch (err) {
+      console.error('[getOrCreateUserBySupabaseId]', err);
+      res.status(500).json({ error: 'Failed to get or create user' });
+    }
+  };
+  
+
 /**
  * GET user by username
  */
@@ -50,49 +78,29 @@ export const getUserByUsername = async (req, res) => {
 };
 
 /**
- * POST newly registered user
- */
-export const registerUser = async (req, res) => {
-  const { email, username, name } = req.body;
-
-  try {
-    const newUser = await prisma.user.create({
-      data: { email, username, name }
-    });
-    res.status(201).json(newUser);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Failed to register user' });
-  }
-};
-
-/**
  * PUT profile edits
  */
-export const updateUserProfile = async (req, res) => {
-  const { username } = req.params;
-  const { bio, isPrivate } = req.body;
+export const updateUserAndCreateProfile = async (req, res) => {
+  const { supabaseId } = req.params;
+  const { name, username } = req.body;
 
   try {
     const user = await prisma.user.update({
-      where: { username },
-      data: {
-        Profile: {
-          upsert: {
-            create: { bio, isPrivate },
-            update: { bio, isPrivate }
-          }
-        }
+      where: {
+        supabaseId: supabaseId
       },
-      include: { Profile: true }
+      data: {
+        name: name,
+        username: username,
+      },
     });
 
-    res.json(user);
+  res.status(200).json(user);
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: 'Failed to update profile' });
+    res.status(500).json({ error: 'Failed to update user' });
   }
-};
+};  
 
 /**
  * GET user's followers
@@ -109,6 +117,10 @@ export const getUserFollowers = async (req, res) => {
         }
       }
     });
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
 
     res.json(user.followedBy);
   } catch (err) {
@@ -132,6 +144,10 @@ export const getUserFollowing = async (req, res) => {
         }
       }
     });
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
 
     res.json(user.following);
   } catch (err) {
@@ -197,3 +213,42 @@ export const unfollowUser = async (req, res) => {
     res.status(500).json({ error: 'Failed to unfollow user' });
   }
 };
+
+export const checkUsernameAvailability = async (req, res) => {
+    const { username } = req.params;
+  
+    try {
+      // Check if username already exists
+      const existingUser = await prisma.user.findUnique({
+        where: { username: username.toLowerCase() },
+      });
+  
+      res.json({ 
+        available: !existingUser,
+        username: username.toLowerCase()
+      });
+    } catch (err) {
+      console.error('Error checking username availability:', err);
+      res.status(500).json({ 
+        error: 'Failed to check username availability',
+        available: false 
+      });
+    }
+  };
+
+export const completeOnboarding = async (req, res) => {
+    const { supabaseId } = req.params;
+  
+    try {
+      const user = await prisma.user.update({
+        where: { supabaseId: supabaseId },
+        data: { hasCompletedOnboarding: true },
+      });
+  
+      res.json(user);
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: 'Failed to complete onboarding' });
+    }
+  };
+  

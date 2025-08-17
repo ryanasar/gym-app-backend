@@ -1,8 +1,10 @@
 import express from 'express';
 import { PrismaClient } from '@prisma/client';
+import authRoutes from './routes/authRoutes.js'
 import userRoutes from './routes/userRoutes.js';
 import postRoutes from './routes/postRoutes.js';
 import workoutPlanRoutes from './routes/workoutPlanRoutes.js';
+import profileRoutes from './routes/profileRoutes.js'
 
 const app = express();
 const prisma = new PrismaClient();
@@ -13,11 +15,15 @@ app.get('/', (req, res) => {
   res.send('API is running');
 });
 
+app.use("/api/auth", authRoutes);
+
 app.use('/api/users', userRoutes);
 
 app.use('/api/posts', postRoutes);
 
 app.use('/api/workoutplans', workoutPlanRoutes);
+
+app.use('/api/profiles', profileRoutes)
 
 app.use((err, req, res, next) => {
   console.error(err.stack);

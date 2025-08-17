@@ -10,8 +10,10 @@ datasource db {
 model User {
   id           Int           @id @default(autoincrement())
   email        String        @unique
-  name         String?
-  username     String        @unique
+  supabaseId   String?       @unique
+  hasCompletedOnboarding Boolean @default(false)
+  name         String?       
+  username     String?       @unique
   workouts     Workout[]
   createdAt    DateTime      @default(now())
   profile      Profile?
@@ -40,15 +42,15 @@ model Profile {
   bio       String?
   user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId    Int     @unique
-  isPrivate Boolean
+  isPrivate Boolean?
 }
 
 model WorkoutPlan {
   id          Int          @id @default(autoincrement())
   userId      Int
   user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-  isPublic    Boolean
-  numDays     Int
+  isPublic    Boolean?
+  numDays     Int?
   workoutDays WorkoutDay[]
   likes       Like[]
   comments    Comment[]
@@ -59,8 +61,8 @@ model WorkoutPlan {
 
 model WorkoutDay {
   id            Int          @id @default(autoincrement())
-  dayIndex      Int
-  isRest        Boolean
+  dayIndex      Int?
+  isRest        Boolean?
   workoutId     Int?
   workout       Workout?     @relation(fields: [workoutId], references: [id], onDelete: SetNull)
   workoutPlanId Int?
@@ -69,7 +71,7 @@ model WorkoutDay {
 
 model Workout {
   id           Int           @id @default(autoincrement())
-  title        String
+  title        String?
   notes        String?
   userId       Int
   user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -84,7 +86,7 @@ model Workout {
 model Exercise {
   id        Int              @id @default(autoincrement())
   workoutId Int
-  name      String
+  name      String?
   sets      Int?
   reps      Int?
   weight    Int?
@@ -96,7 +98,7 @@ model Exercise {
 
 model Muscle {
   id        Int              @id @default(autoincrement())
-  name      String           @unique
+  name      String?          @unique
   exercises MuscleExercise[]
 }
 
@@ -124,8 +126,8 @@ model Post {
   id            Int          @id @default(autoincrement())
   createdAt     DateTime     @default(now())
   updatedAt     DateTime     @updatedAt
-  title         String
-  description   String
+  title         String?
+  description   String?
   published     Boolean      @default(false)
   authorId      Int
   author        User         @relation("UserPosts", fields: [authorId], references: [id], onDelete: Cascade)
@@ -145,7 +147,7 @@ model Comment {
   id            Int          @id @default(autoincrement())
   userId        Int
   author        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-  content       String
+  content       String?
   timestamp     DateTime     @default(now())
   postId        Int?
   post          Post?        @relation(fields: [postId], references: [id], onDelete: Cascade)

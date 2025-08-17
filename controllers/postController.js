@@ -1,9 +1,9 @@
-import { PrismaClient } from '@prisma/client';
+// controllers/postController.js
 
-const prisma = new PrismaClient();
+import prisma from '../prismaClient.js';
 
 /**
- * Get posts for a specific user by user ID
+ * GET posts for a specific user by user ID
  */
 export const getPostsByUserId = async (req, res) => {
   const { userId } = req.params;
@@ -32,7 +32,7 @@ export const getPostsByUserId = async (req, res) => {
 };
 
 /**
- * Get posts by multiple user IDs
+ * POST get posts by multiple user IDs
  */
 export const getPostsByUserIds = async (req, res) => {
   const { userIds } = req.body; // Expecting userIds as an array in request body
