@@ -12,12 +12,13 @@ model User {
   email        String        @unique
   supabaseId   String?       @unique
   hasCompletedOnboarding Boolean @default(false)
-  name         String?       
+  name         String?
   username     String?       @unique
   workouts     Workout[]
+  workoutSessions WorkoutSession[]
   createdAt    DateTime      @default(now())
   profile      Profile?
-  workoutPlans WorkoutPlan[]
+  splits       Split[]
   followedBy   Follows[]     @relation("followedBy")
   following    Follows[]     @relation("following")
   achievements Achievement[]
@@ -45,28 +46,39 @@ model Profile {
   isPrivate Boolean?
 }
 
-model WorkoutPlan {
+model Split {
   id          Int          @id @default(autoincrement())
   userId      Int
   user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-  isPublic    Boolean?
+  name        String
+  emoji       String?
+  description String?
+  isPublic    Boolean?     @default(false)
   numDays     Int?
   workoutDays WorkoutDay[]
+  workoutSessions WorkoutSession[]
   likes       Like[]
   comments    Comment[]
   Post        Post[]
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
 
   @@index([userId])
 }
 
 model WorkoutDay {
-  id            Int          @id @default(autoincrement())
-  dayIndex      Int?
-  isRest        Boolean?
-  workoutId     Int?
-  workout       Workout?     @relation(fields: [workoutId], references: [id], onDelete: SetNull)
-  workoutPlanId Int?
-  WorkoutPlan   WorkoutPlan? @relation(fields: [workoutPlanId], references: [id], onDelete: Cascade)
+  id                 Int          @id @default(autoincrement())
+  dayIndex           Int?
+  workoutName        String?
+  workoutDescription String?
+  workoutType        String?
+  emoji              String?
+  isRest             Boolean?     @default(false)
+  exercises          Json?
+  workoutId          Int?
+  workout            Workout?     @relation(fields: [workoutId], references: [id], onDelete: SetNull)
+  splitId            Int?
+  split              Split?       @relation(fields: [splitId], references: [id], onDelete: Cascade)
 }
 
 model Workout {
@@ -83,23 +95,44 @@ model Workout {
   @@index([userId])
 }
 
-model Exercise {
-  id        Int              @id @default(autoincrement())
-  workoutId Int
-  name      String?
-  sets      Int?
-  reps      Int?
-  weight    Int?
-  workout   Workout          @relation(fields: [workoutId], references: [id], onDelete: Cascade)
-  muscles   MuscleExercise[]
+model ExerciseTemplate {
+  id          Int                       @id @default(autoincrement())
+  name        String                    @unique
+  description String?
+  imageUrl    String?
+  equipment   String?
+  difficulty  String?
+  muscles     MuscleExerciseTemplate[]
+  exercises   Exercise[]
+  workoutSessionExercises WorkoutSessionExercise[]
+}
 
-  @@index([workoutId])
+model MuscleExerciseTemplate {
+  muscleId           Int
+  exerciseTemplateId Int
+  muscle             Muscle           @relation(fields: [muscleId], references: [id], onDelete: Cascade)
+  exerciseTemplate   ExerciseTemplate @relation(fields: [exerciseTemplateId], references: [id], onDelete: Cascade)
+
+  @@id([muscleId, exerciseTemplateId])
+}
+
+model Exercise {
+  id                 Int              @id @default(autoincrement())
+  workoutId          Int
+  exerciseTemplateId Int
+  sets               Int?
+  reps               Int?
+  weight             Int?
+  workout            Workout          @relation(fields: [workoutId], references: [id], onDelete: Cascade)
+  template           ExerciseTemplate @relation(fields: [exerciseTemplateId], references: [id])
+  muscles            MuscleExercise[]
 }
 
 model Muscle {
-  id        Int              @id @default(autoincrement())
-  name      String?          @unique
+  id        Int                      @id @default(autoincrement())
+  name      String?                  @unique
   exercises MuscleExercise[]
+  templates MuscleExerciseTemplate[]
 }
 
 model MuscleExercise {
@@ -109,6 +142,54 @@ model MuscleExercise {
   exercise   Exercise @relation(fields: [exerciseId], references: [id], onDelete: Cascade)
 
   @@id([muscleId, exerciseId])
+}
+
+// Workout Session Models - for tracking completed workouts
+model WorkoutSession {
+  id           Int                      @id @default(autoincrement())
+  userId       Int
+  user         User                     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  splitId      Int?
+  split        Split?                   @relation(fields: [splitId], references: [id], onDelete: SetNull)
+  dayName      String
+  weekNumber   Int?
+  dayNumber    Int?
+  startedAt    DateTime                 @default(now())
+  completedAt  DateTime?
+  notes        String?
+  exercises    WorkoutSessionExercise[]
+  posts        Post[]
+
+  @@index([userId])
+  @@index([completedAt])
+}
+
+model WorkoutSessionExercise {
+  id               Int             @id @default(autoincrement())
+  workoutSessionId Int
+  workoutSession   WorkoutSession  @relation(fields: [workoutSessionId], references: [id], onDelete: Cascade)
+  exerciseName     String
+  exerciseTemplateId Int?
+  template         ExerciseTemplate? @relation(fields: [exerciseTemplateId], references: [id], onDelete: SetNull)
+  orderIndex       Int
+  notes            String?
+  sets             WorkoutSet[]
+
+  @@index([workoutSessionId])
+}
+
+model WorkoutSet {
+  id                       Int                    @id @default(autoincrement())
+  workoutSessionExerciseId Int
+  exercise                 WorkoutSessionExercise @relation(fields: [workoutSessionExerciseId], references: [id], onDelete: Cascade)
+  setNumber                Int
+  weight                   Float?
+  reps                     Int?
+  rpe                      Float?
+  completed                Boolean                @default(false)
+  completedAt              DateTime?
+
+  @@index([workoutSessionExerciseId])
 }
 
 model Achievement {
@@ -123,22 +204,24 @@ model Achievement {
 }
 
 model Post {
-  id            Int          @id @default(autoincrement())
-  createdAt     DateTime     @default(now())
-  updatedAt     DateTime     @updatedAt
-  title         String?
-  description   String?
-  published     Boolean      @default(false)
-  authorId      Int
-  author        User         @relation("UserPosts", fields: [authorId], references: [id], onDelete: Cascade)
-  workoutId     Int?
-  workout       Workout?     @relation(fields: [workoutId], references: [id], onDelete: SetNull)
-  workoutPlanId Int?
-  workoutPlan   WorkoutPlan? @relation(fields: [workoutPlanId], references: [id], onDelete: SetNull)
-  achievementId Int?
-  achievement   Achievement? @relation(fields: [achievementId], references: [id], onDelete: SetNull)
-  likes         Like[]
-  comments      Comment[]
+  id               Int             @id @default(autoincrement())
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+  title            String?
+  description      String?
+  published        Boolean         @default(false)
+  authorId         Int
+  author           User            @relation("UserPosts", fields: [authorId], references: [id], onDelete: Cascade)
+  workoutId        Int?
+  workout          Workout?        @relation(fields: [workoutId], references: [id], onDelete: SetNull)
+  workoutSessionId Int?
+  workoutSession   WorkoutSession? @relation(fields: [workoutSessionId], references: [id], onDelete: SetNull)
+  splitId          Int?
+  split            Split?          @relation(fields: [splitId], references: [id], onDelete: SetNull)
+  achievementId    Int?
+  achievement      Achievement?    @relation(fields: [achievementId], references: [id], onDelete: SetNull)
+  likes            Like[]
+  comments         Comment[]
 
   @@index([authorId])
 }
@@ -151,8 +234,8 @@ model Comment {
   timestamp     DateTime     @default(now())
   postId        Int?
   post          Post?        @relation(fields: [postId], references: [id], onDelete: Cascade)
-  workoutPlanId Int?
-  WorkoutPlan   WorkoutPlan? @relation(fields: [workoutPlanId], references: [id], onDelete: Cascade)
+  splitId       Int?
+  split         Split?       @relation(fields: [splitId], references: [id], onDelete: Cascade)
 
   @@index([userId])
 }
@@ -164,8 +247,8 @@ model Like {
   timestamp     DateTime     @default(now())
   postId        Int?
   post          Post?        @relation(fields: [postId], references: [id], onDelete: Cascade)
-  workoutPlanId Int?
-  workoutPlan   WorkoutPlan? @relation(fields: [workoutPlanId], references: [id], onDelete: Cascade)
+  splitId       Int?
+  split         Split?       @relation(fields: [splitId], references: [id], onDelete: Cascade)
 
   @@index([userId])
 }

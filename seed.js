@@ -188,8 +188,8 @@ async function createTestData() {
     ]);
 
     // Create workout plans for Ryan
-    const workoutPlans = await Promise.all([
-      prisma.workoutPlan.create({
+    const splits = await Promise.all([
+      prisma.split.create({
         data: {
           userId: ryanUser.id,
           isPublic: true,
@@ -206,7 +206,7 @@ async function createTestData() {
           }
         }
       }),
-      prisma.workoutPlan.create({
+      prisma.split.create({
         data: {
           userId: ryanUser.id,
           isPublic: true,
@@ -257,7 +257,7 @@ async function createTestData() {
           description: 'Starting a new 6-day PPL split. Really excited to see how this goes! The volume is higher than what I\'m used to but I think I\'m ready for it.',
           published: true,
           authorId: ryanUser.id,
-          workoutPlanId: workoutPlans[0].id
+          splitId: splits[0].id
         }
       }),
       prisma.post.create({
@@ -329,33 +329,33 @@ async function createTestData() {
       })
     ]);
 
-    // Add likes to workout plans
+    // Add likes to splits
     await Promise.all([
       prisma.like.create({
-        data: { userId: john.id, workoutPlanId: workoutPlans[0].id }
+        data: { userId: john.id, splitId: splits[0].id }
       }),
       prisma.like.create({
-        data: { userId: jane.id, workoutPlanId: workoutPlans[0].id }
+        data: { userId: jane.id, splitId: splits[0].id }
       }),
       prisma.like.create({
-        data: { userId: mike.id, workoutPlanId: workoutPlans[1].id }
+        data: { userId: mike.id, splitId: splits[1].id }
       })
     ]);
 
-    // Add comments to workout plans
+    // Add comments to splits
     await Promise.all([
       prisma.comment.create({
         data: {
           userId: alex.id,
           content: 'This looks like a great program! Mind if I try it?',
-          workoutPlanId: workoutPlans[0].id
+          splitId: splits[0].id
         }
       }),
       prisma.comment.create({
         data: {
           userId: john.id,
           content: 'Nice split! How long have you been running this?',
-          workoutPlanId: workoutPlans[1].id
+          splitId: splits[1].id
         }
       })
     ]);
@@ -363,7 +363,7 @@ async function createTestData() {
     console.log('✅ Test data created successfully!');
     console.log(`User: ${ryanUser.email} (ID: ${ryanUser.id})`);
     console.log(`Created ${workouts.length} workouts`);
-    console.log(`Created ${workoutPlans.length} workout plans`);
+    console.log(`Created ${splits.length} splits`);
     console.log(`Created ${posts.length} posts`);
     console.log(`Created ${achievements.length} achievements`);
     console.log('Created follow relationships and interactions');

@@ -1,12 +1,22 @@
 import express from 'express';
-import { getPostsByUserId, getPostsByUserIds } from '../controllers/postController.js';
+import {
+  getPostsByUserId,
+  getPostsByUserIds,
+  getAllPosts,
+  getPostById,
+  createPost,
+  updatePost,
+  deletePost
+} from '../controllers/postController.js';
 
 const router = express.Router();
 
-// GET posts for a specific user
+router.get('/', getAllPosts);
 router.get('/user/:userId', getPostsByUserId);
-
-// POST posts for multiple users (pass array of userIds in body)
 router.post('/multiple', getPostsByUserIds);
+router.get('/:id', getPostById);
+router.post('/', createPost);
+router.put('/:id', updatePost);
+router.delete('/:id', deletePost);
 
 export default router;

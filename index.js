@@ -3,8 +3,16 @@ import { PrismaClient } from '@prisma/client';
 import authRoutes from './routes/authRoutes.js'
 import userRoutes from './routes/userRoutes.js';
 import postRoutes from './routes/postRoutes.js';
-import workoutPlanRoutes from './routes/workoutPlanRoutes.js';
-import profileRoutes from './routes/profileRoutes.js'
+import splitRoutes from './routes/splitRoutes.js';
+import profileRoutes from './routes/profileRoutes.js';
+import workoutRoutes from './routes/workouts.js';
+import workoutSessionRoutes from './routes/workoutSessionRoutes.js';
+import exerciseRoutes from './routes/excercises.js';
+import exerciseTemplateRoutes from './routes/exerciseTemplateRoutes.js';
+import muscleRoutes from './routes/muscleRoutes.js';
+import commentRoutes from './routes/commentRoutes.js';
+import likeRoutes from './routes/likeRoutes.js';
+import achievementRoutes from './routes/achievementRoutes.js';
 
 const app = express();
 const prisma = new PrismaClient();
@@ -21,9 +29,25 @@ app.use('/api/users', userRoutes);
 
 app.use('/api/posts', postRoutes);
 
-app.use('/api/workoutplans', workoutPlanRoutes);
+app.use('/api/splits', splitRoutes);
 
-app.use('/api/profiles', profileRoutes)
+app.use('/api/profiles', profileRoutes);
+
+app.use('/api/workouts', workoutRoutes);
+
+app.use('/api/workout-sessions', workoutSessionRoutes);
+
+app.use('/api/exercises', exerciseRoutes);
+
+app.use('/api/exercise-templates', exerciseTemplateRoutes);
+
+app.use('/api/muscles', muscleRoutes);
+
+app.use('/api/comments', commentRoutes);
+
+app.use('/api/likes', likeRoutes);
+
+app.use('/api/achievements', achievementRoutes);
 
 app.use((err, req, res, next) => {
   console.error(err.stack);

@@ -22,7 +22,7 @@ export const getProfileByUserId = async (req, res) => {
             _count: {
               select: {
                 workouts: true,
-                workoutPlans: true,
+                splits: true,
                 followedBy: true,
                 following: true,
                 posts: true
@@ -257,7 +257,7 @@ export const getPublicProfiles = async (req, res) => {
             _count: {
               select: {
                 workouts: true,
-                workoutPlans: true,
+                splits: true,
                 followedBy: true,
                 following: true,
                 posts: true
