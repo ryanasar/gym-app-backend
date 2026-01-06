@@ -8,7 +8,7 @@ import prisma from '../prismaClient.js';
 export const getProfileByUserId = async (req, res) => {
   try {
     const { userId } = req.params;
-    
+
     const profile = await prisma.profile.findUnique({
       where: { userId: parseInt(userId) },
       include: {
@@ -23,8 +23,11 @@ export const getProfileByUserId = async (req, res) => {
               select: {
                 workouts: true,
                 splits: true,
-                followedBy: true,
-                following: true,
+                // Note: The relation names in the schema are inverted
+                // followedBy = users this user is following (followedById = this user)
+                // following = users following this user (followingId = this user)
+                followedBy: true, // Count of users this user is following
+                following: true,  // Count of users following this user
                 posts: true
               }
             }
@@ -37,7 +40,20 @@ export const getProfileByUserId = async (req, res) => {
       return res.status(404).json({ error: 'Profile not found' });
     }
 
-    res.json(profile);
+    // Swap the inverted counts for correct display
+    const correctedProfile = {
+      ...profile,
+      user: {
+        ...profile.user,
+        _count: {
+          ...profile.user._count,
+          followedBy: profile.user._count.following, // Swap: followers
+          following: profile.user._count.followedBy, // Swap: following
+        }
+      }
+    };
+
+    res.json(correctedProfile);
   } catch (error) {
     console.error('Error fetching profile:', error);
     res.status(500).json({ error: 'Internal server error' });

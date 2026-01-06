@@ -220,6 +220,7 @@ model Post {
   split            Split?          @relation(fields: [splitId], references: [id], onDelete: SetNull)
   achievementId    Int?
   achievement      Achievement?    @relation(fields: [achievementId], references: [id], onDelete: SetNull)
+  streak           Int?
   likes            Like[]
   comments         Comment[]
 

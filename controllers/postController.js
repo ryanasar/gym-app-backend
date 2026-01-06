@@ -190,7 +190,7 @@ export const getPostById = async (req, res) => {
  * CREATE post
  */
 export const createPost = async (req, res) => {
-  const { title, description, published, authorId, workoutId, workoutSessionId, splitId, achievementId } = req.body;
+  const { title, description, published, authorId, workoutId, workoutSessionId, splitId, achievementId, streak } = req.body;
 
   try {
     const post = await prisma.post.create({
@@ -203,6 +203,7 @@ export const createPost = async (req, res) => {
         workoutSessionId: workoutSessionId ? parseInt(workoutSessionId) : null,
         splitId: splitId ? parseInt(splitId) : null,
         achievementId: achievementId ? parseInt(achievementId) : null,
+        streak: streak ? parseInt(streak) : null,
       },
       include: {
         author: {
@@ -306,5 +307,107 @@ export const deletePost = async (req, res) => {
   } catch (error) {
     console.error('Error deleting post:', error);
     res.status(500).json({ error: 'Failed to delete post' });
+  }
+};
+
+/**
+ * GET posts from users that the current user is following (with pagination)
+ */
+export const getFollowingPosts = async (req, res) => {
+  const { userId } = req.params;
+  const { cursor, limit = 10 } = req.query;
+
+  try {
+    // Get the list of users that this user is following
+    // Note: Schema inversion - followedBy contains users this user is following
+    const user = await prisma.user.findUnique({
+      where: { id: parseInt(userId) },
+      include: {
+        followedBy: {
+          select: {
+            followingId: true
+          }
+        }
+      }
+    });
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // Get the IDs of followed users (schema is inverted)
+    const followedUserIds = user.followedBy.map(f => f.followingId);
+
+    // Include the current user's own posts in the feed
+    const userIdsToShow = [...followedUserIds, parseInt(userId)];
+
+    // If not following anyone and not including self, return empty array
+    if (userIdsToShow.length === 0) {
+      return res.json({ posts: [], nextCursor: null, hasMore: false });
+    }
+
+    // Build query options
+    const queryOptions = {
+      where: {
+        authorId: { in: userIdsToShow },
+        published: true
+      },
+      include: {
+        author: {
+          select: {
+            id: true,
+            username: true,
+            name: true
+          }
+        },
+        workout: true,
+        workoutSession: {
+          include: {
+            exercises: {
+              include: {
+                sets: true
+              }
+            }
+          }
+        },
+        split: true,
+        achievement: true,
+        _count: {
+          select: {
+            likes: true,
+            comments: true,
+          }
+        },
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+      take: parseInt(limit) + 1, // Fetch one extra to determine if there are more
+    };
+
+    // Add cursor if provided
+    if (cursor) {
+      queryOptions.cursor = {
+        id: parseInt(cursor)
+      };
+      queryOptions.skip = 1; // Skip the cursor
+    }
+
+    // Fetch posts from followed users
+    const posts = await prisma.post.findMany(queryOptions);
+
+    // Check if there are more posts
+    const hasMore = posts.length > parseInt(limit);
+    const postsToReturn = hasMore ? posts.slice(0, -1) : posts;
+    const nextCursor = hasMore ? postsToReturn[postsToReturn.length - 1].id : null;
+
+    res.json({
+      posts: postsToReturn,
+      nextCursor,
+      hasMore
+    });
+  } catch (error) {
+    console.error('Error getting following posts:', error);
+    res.status(500).json({ error: 'Failed to get following posts' });
   }
 };

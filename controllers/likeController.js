@@ -82,7 +82,9 @@ export const getLikesByUserId = async (req, res) => {
 
 export const createLike = async (req, res) => {
   try {
-    const { userId, postId, splitId } = req.body;
+    // Support both route params and body for postId
+    const postId = req.params.postId || req.body.postId;
+    const { userId, splitId } = req.body;
 
     const existingLike = await prisma.like.findFirst({
       where: {
@@ -135,11 +137,31 @@ export const createLike = async (req, res) => {
 
 export const deleteLike = async (req, res) => {
   try {
-    const { id } = req.params;
+    const { id, postId, userId } = req.params;
 
-    await prisma.like.delete({
-      where: { id: parseInt(id) }
-    });
+    // Support deletion by id or by postId + userId
+    if (id) {
+      await prisma.like.delete({
+        where: { id: parseInt(id) }
+      });
+    } else if (postId && userId) {
+      const like = await prisma.like.findFirst({
+        where: {
+          postId: parseInt(postId),
+          userId: parseInt(userId)
+        }
+      });
+
+      if (!like) {
+        return res.status(404).json({ error: 'Like not found' });
+      }
+
+      await prisma.like.delete({
+        where: { id: like.id }
+      });
+    } else {
+      return res.status(400).json({ error: 'Invalid parameters' });
+    }
 
     res.json({ message: 'Like removed successfully' });
   } catch (error) {

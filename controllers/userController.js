@@ -52,21 +52,29 @@ export const getUserByUsername = async (req, res) => {
               isPrivate: true
             }
           },
-          followedBy: { select: { followedById: true } },
-          following: { select: { followingId: true } }
+          // Note: The relation names in the schema are inverted
+          // followedBy = users this user is following (followedById = this user)
+          // following = users following this user (followingId = this user)
+          followedBy: { select: { followingId: true } }, // Users this user is following
+          following: { select: { followedById: true } }  // Users following this user
         }
       });
-  
+
       if (!user) {
         return res.status(404).json({ error: 'User not found' });
       }
-  
+
       const workoutCount = user.workouts?.length || 0;
-      const followerCount = user.followedBy?.length || 0;
-      const followingCount = user.following?.length || 0;
-  
+      // following contains the users following this user (followers)
+      const followerCount = user.following?.length || 0;
+      // followedBy contains the users this user is following
+      const followingCount = user.followedBy?.length || 0;
+
       res.json({
         ...user,
+        // Return with corrected field names for clarity
+        followedBy: user.following, // Users following this user
+        following: user.followedBy, // Users this user is following
         workoutCount,
         followerCount,
         followingCount
@@ -95,7 +103,22 @@ export const updateUserAndCreateProfile = async (req, res) => {
       },
     });
 
-  res.status(200).json(user);
+    // Create profile if it doesn't exist
+    const existingProfile = await prisma.profile.findUnique({
+      where: { userId: user.id }
+    });
+
+    if (!existingProfile) {
+      await prisma.profile.create({
+        data: {
+          userId: user.id,
+          bio: '',
+          isPrivate: false
+        }
+      });
+    }
+
+    res.status(200).json(user);
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Failed to update user' });
@@ -170,6 +193,21 @@ export const followUser = async (req, res) => {
       return res.status(404).json({ error: 'User to follow not found' });
     }
 
+    // Check if already following
+    const existingFollow = await prisma.follows.findUnique({
+      where: {
+        followingId_followedById: {
+          followingId: userToFollow.id,
+          followedById: followerId
+        }
+      }
+    });
+
+    // If already following, return success (idempotent operation)
+    if (existingFollow) {
+      return res.json({ message: 'Already following', alreadyFollowing: true });
+    }
+
     await prisma.follows.create({
       data: {
         followingId: userToFollow.id,
@@ -198,6 +236,21 @@ export const unfollowUser = async (req, res) => {
       return res.status(404).json({ error: 'User to unfollow not found' });
     }
 
+    // Check if follow relationship exists
+    const existingFollow = await prisma.follows.findUnique({
+      where: {
+        followingId_followedById: {
+          followingId: userToUnfollow.id,
+          followedById: followerId
+        }
+      }
+    });
+
+    // If not following, return success (idempotent operation)
+    if (!existingFollow) {
+      return res.json({ message: 'Not following', wasNotFollowing: true });
+    }
+
     await prisma.follows.delete({
       where: {
         followingId_followedById: {
@@ -214,8 +267,96 @@ export const unfollowUser = async (req, res) => {
   }
 };
 
+/**
+ * GET followers list for a user
+ */
+export const getFollowers = async (req, res) => {
+  const { username } = req.params;
+
+  try {
+    const user = await prisma.user.findUnique({
+      where: { username },
+      include: {
+        // following relation contains users who are following this user (followers)
+        following: {
+          select: {
+            followedBy: {
+              select: {
+                id: true,
+                username: true,
+                name: true,
+                profile: {
+                  select: {
+                    bio: true
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    });
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // Extract followers from the relation
+    const followers = user.following.map(f => f.followedBy);
+
+    res.json(followers);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to fetch followers' });
+  }
+};
+
+/**
+ * GET following list for a user
+ */
+export const getFollowing = async (req, res) => {
+  const { username } = req.params;
+
+  try {
+    const user = await prisma.user.findUnique({
+      where: { username },
+      include: {
+        // followedBy relation contains users this user is following
+        followedBy: {
+          select: {
+            following: {
+              select: {
+                id: true,
+                username: true,
+                name: true,
+                profile: {
+                  select: {
+                    bio: true
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    });
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // Extract following from the relation
+    const following = user.followedBy.map(f => f.following);
+
+    res.json(following);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to fetch following' });
+  }
+};
+
 export const checkUsernameAvailability = async (req, res) => {
-    const { username } = req.params;
+    const { username} = req.params;
   
     try {
       // Check if username already exists
@@ -238,17 +379,88 @@ export const checkUsernameAvailability = async (req, res) => {
 
 export const completeOnboarding = async (req, res) => {
     const { supabaseId } = req.params;
-  
+
     try {
       const user = await prisma.user.update({
         where: { supabaseId: supabaseId },
         data: { hasCompletedOnboarding: true },
       });
-  
+
       res.json(user);
     } catch (err) {
       console.error(err);
       res.status(500).json({ error: 'Failed to complete onboarding' });
     }
   };
+
+/**
+ * GET search users by username or name
+ */
+export const searchUsers = async (req, res) => {
+  const { query } = req.query;
+  const { currentUserId } = req.query;
+
+  if (!query || query.trim() === '') {
+    return res.json([]);
+  }
+
+  try {
+    const users = await prisma.user.findMany({
+      where: {
+        OR: [
+          { username: { contains: query, mode: 'insensitive' } },
+          { name: { contains: query, mode: 'insensitive' } }
+        ],
+        hasCompletedOnboarding: true
+      },
+      select: {
+        id: true,
+        username: true,
+        name: true,
+        profile: {
+          select: {
+            bio: true,
+            isPrivate: true
+          }
+        },
+        _count: {
+          select: {
+            followedBy: true,
+            following: true,
+            posts: true
+          }
+        }
+      },
+      take: 20
+    });
+
+    // If currentUserId is provided, check if the current user follows each result
+    if (currentUserId) {
+      const usersWithFollowStatus = await Promise.all(
+        users.map(async (user) => {
+          const isFollowing = await prisma.follows.findUnique({
+            where: {
+              followingId_followedById: {
+                followingId: user.id,
+                followedById: parseInt(currentUserId)
+              }
+            }
+          });
+
+          return {
+            ...user,
+            isFollowing: !!isFollowing
+          };
+        })
+      );
+
+      return res.json(usersWithFollowStatus);
+    }
+
+    res.json(users);
+  } catch (err) {
+    console.error('Error searching users:', err);
+    res.status(500).json({ error: 'Failed to search users' });
+  }
+};
   

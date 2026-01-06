@@ -120,7 +120,9 @@ export const getCommentById = async (req, res) => {
 
 export const createComment = async (req, res) => {
   try {
-    const { userId, content, postId, splitId } = req.body;
+    // Support both route params and body for postId
+    const postId = req.params.postId || req.body.postId;
+    const { userId, content, splitId } = req.body;
 
     const comment = await prisma.comment.create({
       data: {
