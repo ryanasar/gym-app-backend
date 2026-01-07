@@ -25,6 +25,11 @@ export const getPostsByUserId = async (req, res) => {
         },
         split: true,
         achievement: true,
+        likes: {
+          select: {
+            userId: true,
+          }
+        },
         _count: {
           select: {
             likes: true,
@@ -73,6 +78,11 @@ export const getPostsByUserIds = async (req, res) => {
         },
         split: true,
         achievement: true,
+        likes: {
+          select: {
+            userId: true,
+          }
+        },
         _count: {
           select: {
             likes: true,
@@ -118,6 +128,11 @@ export const getAllPosts = async (req, res) => {
         },
         split: true,
         achievement: true,
+        likes: {
+          select: {
+            userId: true,
+          }
+        },
         _count: {
           select: {
             likes: true,
@@ -166,6 +181,11 @@ export const getPostById = async (req, res) => {
         },
         split: true,
         achievement: true,
+        likes: {
+          select: {
+            userId: true,
+          }
+        },
         _count: {
           select: {
             likes: true,
@@ -190,13 +210,14 @@ export const getPostById = async (req, res) => {
  * CREATE post
  */
 export const createPost = async (req, res) => {
-  const { title, description, published, authorId, workoutId, workoutSessionId, splitId, achievementId, streak } = req.body;
+  const { title, description, imageUrl, published, authorId, workoutId, workoutSessionId, splitId, achievementId, streak } = req.body;
 
   try {
     const post = await prisma.post.create({
       data: {
         title,
         description,
+        imageUrl,
         published: published || false,
         authorId: parseInt(authorId),
         workoutId: workoutId ? parseInt(workoutId) : null,
@@ -225,6 +246,11 @@ export const createPost = async (req, res) => {
         },
         split: true,
         achievement: true,
+        likes: {
+          select: {
+            userId: true,
+          }
+        },
         _count: {
           select: {
             likes: true,
@@ -246,7 +272,7 @@ export const createPost = async (req, res) => {
  */
 export const updatePost = async (req, res) => {
   const { id } = req.params;
-  const { title, description, published } = req.body;
+  const { title, description, imageUrl, published } = req.body;
 
   try {
     const post = await prisma.post.update({
@@ -254,6 +280,7 @@ export const updatePost = async (req, res) => {
       data: {
         title,
         description,
+        imageUrl,
         published,
       },
       include: {
@@ -276,6 +303,11 @@ export const updatePost = async (req, res) => {
         },
         split: true,
         achievement: true,
+        likes: {
+          select: {
+            userId: true,
+          }
+        },
         _count: {
           select: {
             likes: true,
@@ -372,6 +404,11 @@ export const getFollowingPosts = async (req, res) => {
         },
         split: true,
         achievement: true,
+        likes: {
+          select: {
+            userId: true,
+          }
+        },
         _count: {
           select: {
             likes: true,
