@@ -331,9 +331,52 @@ export const deletePost = async (req, res) => {
   const { id } = req.params;
 
   try {
+    // First, fetch the post to get the imageUrl
+    const post = await prisma.post.findUnique({
+      where: { id: parseInt(id) },
+      select: { imageUrl: true },
+    });
+
+    if (!post) {
+      return res.status(404).json({ error: 'Post not found' });
+    }
+
+    // Delete the post from database
     await prisma.post.delete({
       where: { id: parseInt(id) },
     });
+
+    // If post had an image, delete it from Supabase storage
+    if (post.imageUrl) {
+      try {
+        // Extract the file path from the imageUrl
+        // URL format: https://[project-id].supabase.co/storage/v1/object/public/images/posts/filename.jpg
+        // We need to extract: posts/filename.jpg
+        const urlParts = post.imageUrl.split('/images/');
+        if (urlParts.length > 1) {
+          const filePath = urlParts[1];
+
+          // Delete from Supabase storage
+          const { createClient } = await import('@supabase/supabase-js');
+          const supabase = createClient(
+            process.env.SUPABASE_URL,
+            process.env.SUPABASE_SERVICE_KEY // Use service key for admin operations
+          );
+
+          const { error: deleteError } = await supabase.storage
+            .from('images')
+            .remove([filePath]);
+
+          if (deleteError) {
+            console.error('Error deleting image from storage:', deleteError);
+            // Don't fail the whole operation if image deletion fails
+          }
+        }
+      } catch (storageError) {
+        console.error('Error deleting image from storage:', storageError);
+        // Don't fail the whole operation if image deletion fails
+      }
+    }
 
     res.json({ message: 'Post deleted successfully' });
   } catch (error) {

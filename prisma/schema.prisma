@@ -54,6 +54,7 @@ model Split {
   emoji       String?
   description String?
   isPublic    Boolean?     @default(false)
+  started     Boolean      @default(false)
   numDays     Int?
   workoutDays WorkoutDay[]
   workoutSessions WorkoutSession[]

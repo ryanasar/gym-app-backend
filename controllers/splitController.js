@@ -186,7 +186,7 @@ export const createSplit = async (req, res) => {
  */
 export const updateSplit = async (req, res) => {
   const { splitId } = req.params;
-  const { isPublic, numDays, name, emoji, description } = req.body;
+  const { isPublic, numDays, name, emoji, description, started } = req.body;
 
   try {
     const updateData = {};
@@ -195,6 +195,7 @@ export const updateSplit = async (req, res) => {
     if (name !== undefined) updateData.name = name;
     if (emoji !== undefined) updateData.emoji = emoji;
     if (description !== undefined) updateData.description = description;
+    if (started !== undefined) updateData.started = started;
 
     const updatedSplit = await prisma.split.update({
       where: { id: parseInt(splitId) },
