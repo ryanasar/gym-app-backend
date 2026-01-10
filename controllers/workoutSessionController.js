@@ -37,6 +37,57 @@ export const getWorkoutSessionsByUserId = async (req, res) => {
   }
 };
 
+export const getTodaysWorkoutSession = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { date } = req.query; // Expected format: YYYY-MM-DD
+
+    if (!date) {
+      return res.status(400).json({ error: 'Date parameter is required' });
+    }
+
+    // Parse the date string to create start and end of day in UTC
+    const startOfDay = new Date(date + 'T00:00:00.000Z');
+    const endOfDay = new Date(date + 'T23:59:59.999Z');
+
+    const session = await prisma.workoutSession.findFirst({
+      where: {
+        userId: parseInt(userId),
+        completedAt: {
+          gte: startOfDay,
+          lte: endOfDay
+        }
+      },
+      include: {
+        exercises: {
+          include: {
+            sets: true,
+            template: true
+          },
+          orderBy: { orderIndex: 'asc' }
+        },
+        split: {
+          select: {
+            id: true,
+            name: true,
+            emoji: true
+          }
+        }
+      },
+      orderBy: { completedAt: 'desc' }
+    });
+
+    if (!session) {
+      return res.status(404).json({ error: 'No workout session found for this date' });
+    }
+
+    res.json(session);
+  } catch (error) {
+    console.error('Error fetching today\'s workout session:', error);
+    res.status(500).json({ error: 'Failed to fetch today\'s workout session' });
+  }
+};
+
 export const getWorkoutSessionById = async (req, res) => {
   try {
     const { id } = req.params;
