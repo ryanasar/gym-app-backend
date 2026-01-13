@@ -6,9 +6,9 @@ import prisma from '../prismaClient.js';
 export const getOrCreateUserBySupabaseId = async (req, res) => {
     const { supabaseId } = req.params;
     const { email }  = req.body;
-    
+
     try {
-      const user = await prisma.user.findUnique({
+      let user = await prisma.user.findUnique({
         where: { supabaseId },
       });
 
@@ -20,8 +20,8 @@ export const getOrCreateUserBySupabaseId = async (req, res) => {
           },
         });
       }
-      
-      
+
+
       res.json(user);
     } catch (err) {
       console.error('[getOrCreateUserBySupabaseId]', err);

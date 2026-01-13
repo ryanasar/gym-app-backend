@@ -7,116 +7,34 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User {
-  id           Int           @id @default(autoincrement())
-  email        String        @unique
-  supabaseId   String?       @unique
-  hasCompletedOnboarding Boolean @default(false)
-  name         String?
-  username     String?       @unique
-  workouts     Workout[]
-  workoutSessions WorkoutSession[]
-  createdAt    DateTime      @default(now())
-  profile      Profile?
-  splits       Split[]
-  followedBy   Follows[]     @relation("followedBy")
-  following    Follows[]     @relation("following")
-  achievements Achievement[]
-  posts        Post[]        @relation("UserPosts")
-  comments     Comment[]
-  likes        Like[]
-
-  @@index([username])
-}
-
-model Follows {
-  followedBy   User @relation("followedBy", fields: [followedById], references: [id], onDelete: Cascade)
-  followedById Int
-  following    User @relation("following", fields: [followingId], references: [id], onDelete: Cascade)
-  followingId  Int
-
-  @@id([followingId, followedById])
-}
-
-model Profile {
-  id        Int     @id @default(autoincrement())
-  bio       String?
-  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId    Int     @unique
-  isPrivate Boolean?
-}
-
-model Split {
-  id          Int          @id @default(autoincrement())
-  userId      Int
-  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-  name        String
-  emoji       String?
-  description String?
-  isPublic    Boolean?     @default(false)
-  started     Boolean      @default(false)
-  numDays     Int?
-  workoutDays WorkoutDay[]
-  workoutSessions WorkoutSession[]
-  likes       Like[]
-  comments    Comment[]
-  Post        Post[]
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model Achievement {
+  id        Int      @id @default(autoincrement())
+  workoutId Int?
+  userId    Int
+  workout   Workout? @relation(fields: [workoutId], references: [id])
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  posts     Post[]
 
   @@index([userId])
 }
 
-model WorkoutDay {
-  id                 Int          @id @default(autoincrement())
-  dayIndex           Int?
-  workoutName        String?
-  workoutDescription String?
-  workoutType        String?
-  emoji              String?
-  isRest             Boolean?     @default(false)
-  exercises          Json?
-  workoutId          Int?
-  workout            Workout?     @relation(fields: [workoutId], references: [id], onDelete: SetNull)
-  splitId            Int?
-  split              Split?       @relation(fields: [splitId], references: [id], onDelete: Cascade)
-}
-
-model Workout {
-  id           Int           @id @default(autoincrement())
-  title        String?
-  notes        String?
-  userId       Int
-  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
-  exercises    Exercise[]
-  achievements Achievement[]
-  Post         Post[]
-  WorkoutDay   WorkoutDay[]
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model Comment {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  content   String?
+  timestamp DateTime @default(now())
+  postId    Int?
+  splitId   Int?
+  author    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  post      Post?    @relation(fields: [postId], references: [id], onDelete: Cascade)
+  split     Split?   @relation(fields: [splitId], references: [id], onDelete: Cascade)
 
   @@index([userId])
 }
 
-model ExerciseTemplate {
-  id          Int                       @id @default(autoincrement())
-  name        String                    @unique
-  description String?
-  imageUrl    String?
-  equipment   String?
-  difficulty  String?
-  muscles     MuscleExerciseTemplate[]
-  exercises   Exercise[]
-  workoutSessionExercises WorkoutSessionExercise[]
-}
-
-model MuscleExerciseTemplate {
-  muscleId           Int
-  exerciseTemplateId Int
-  muscle             Muscle           @relation(fields: [muscleId], references: [id], onDelete: Cascade)
-  exerciseTemplate   ExerciseTemplate @relation(fields: [exerciseTemplateId], references: [id], onDelete: Cascade)
-
-  @@id([muscleId, exerciseTemplateId])
-}
-
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model Exercise {
   id                 Int              @id @default(autoincrement())
   workoutId          Int
@@ -129,6 +47,44 @@ model Exercise {
   muscles            MuscleExercise[]
 }
 
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model ExerciseTemplate {
+  id                     Int                      @id @default(autoincrement())
+  name                   String                   @unique
+  description            String?
+  imageUrl               String?
+  equipment              String?
+  difficulty             String?
+  exercises              Exercise[]
+  muscles                MuscleExerciseTemplate[]
+  workoutSessionExercises WorkoutSessionExercise[]
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model Follows {
+  followedById Int
+  followingId  Int
+  followedBy   User @relation("Follows_followedByIdToUser", fields: [followedById], references: [id], onDelete: Cascade)
+  following    User @relation("Follows_followingIdToUser", fields: [followingId], references: [id], onDelete: Cascade)
+
+  @@id([followingId, followedById])
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model Like {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  timestamp DateTime @default(now())
+  postId    Int?
+  splitId   Int?
+  author    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  post      Post?    @relation(fields: [postId], references: [id], onDelete: Cascade)
+  split     Split?   @relation(fields: [splitId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model Muscle {
   id        Int                      @id @default(autoincrement())
   name      String?                  @unique
@@ -136,6 +92,7 @@ model Muscle {
   templates MuscleExerciseTemplate[]
 }
 
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model MuscleExercise {
   muscleId   Int
   exerciseId Int
@@ -145,113 +102,173 @@ model MuscleExercise {
   @@id([muscleId, exerciseId])
 }
 
-// Workout Session Models - for tracking completed workouts
-model WorkoutSession {
-  id           Int                      @id @default(autoincrement())
-  userId       Int
-  user         User                     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  splitId      Int?
-  split        Split?                   @relation(fields: [splitId], references: [id], onDelete: SetNull)
-  dayName      String
-  weekNumber   Int?
-  dayNumber    Int?
-  startedAt    DateTime                 @default(now())
-  completedAt  DateTime?
-  notes        String?
-  exercises    WorkoutSessionExercise[]
-  posts        Post[]
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model MuscleExerciseTemplate {
+  muscleId           Int
+  exerciseTemplateId Int
+  muscle             Muscle           @relation(fields: [muscleId], references: [id], onDelete: Cascade)
+  exerciseTemplate   ExerciseTemplate @relation(fields: [exerciseTemplateId], references: [id], onDelete: Cascade)
 
-  @@index([userId])
-  @@index([completedAt])
+  @@id([muscleId, exerciseTemplateId])
 }
 
-model WorkoutSessionExercise {
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model Post {
   id               Int             @id @default(autoincrement())
-  workoutSessionId Int
-  workoutSession   WorkoutSession  @relation(fields: [workoutSessionId], references: [id], onDelete: Cascade)
-  exerciseName     String
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+  title            String?
+  published        Boolean         @default(false)
+  authorId         Int
+  achievementId    Int?
+  workoutId        Int?
+  description      String?
+  splitId          Int?
+  workoutSessionId Int?
+  streak           Int?
+  imageUrl         String?
+  comments         Comment[]
+  likes            Like[]
+  achievement      Achievement?    @relation(fields: [achievementId], references: [id])
+  author           User            @relation("UserPosts", fields: [authorId], references: [id], onDelete: Cascade)
+  split            Split?          @relation(fields: [splitId], references: [id])
+  workout          Workout?        @relation(fields: [workoutId], references: [id])
+  workoutSession   WorkoutSession? @relation(fields: [workoutSessionId], references: [id])
+
+  @@index([authorId])
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model Profile {
+  id        Int      @id @default(autoincrement())
+  bio       String?
+  userId    Int      @unique
+  isPrivate Boolean?
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model Split {
+  id              Int              @id @default(autoincrement())
+  userId          Int
+  name            String
+  emoji           String?
+  description     String?
+  isPublic        Boolean?         @default(false)
+  started         Boolean          @default(false)
+  numDays         Int?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  workoutDays     WorkoutDay[]
+  workoutSessions WorkoutSession[]
+  likes           Like[]
+  comments        Comment[]
+  Post            Post[]
+
+  @@index([userId])
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model User {
+  id                                 Int              @id @default(autoincrement())
+  email                              String           @unique
+  supabaseId                         String?          @unique
+  hasCompletedOnboarding             Boolean          @default(false)
+  name                               String?
+  username                           String?          @unique
+  createdAt                          DateTime         @default(now())
+  achievements                       Achievement[]
+  comments                           Comment[]
+  followedBy                         Follows[]        @relation("Follows_followedByIdToUser")
+  following                          Follows[]        @relation("Follows_followingIdToUser")
+  likes                              Like[]
+  posts                              Post[]           @relation("UserPosts")
+  profile                            Profile?
+  splits                             Split[]
+  workouts                           Workout[]
+  workoutSessions                    WorkoutSession[]
+
+  @@index([username])
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model Workout {
+  notes        String?
+  userId       Int
+  id           Int           @id @default(autoincrement())
+  title        String?
+  achievements Achievement[]
+  exercises    Exercise[]
+  Post         Post[]
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  WorkoutDay   WorkoutDay[]
+
+  @@index([userId])
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model WorkoutDay {
+  id                 Int      @id @default(autoincrement())
+  dayIndex           Int?
+  workoutName        String?
+  workoutDescription String?
+  workoutType        String?
+  emoji              String?
+  isRest             Boolean? @default(false)
+  exercises          Json?
+  workoutId          Int?
+  splitId            Int?
+  workout            Workout? @relation(fields: [workoutId], references: [id])
+  split              Split?   @relation(fields: [splitId], references: [id], onDelete: Cascade)
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model WorkoutSession {
+  id          Int                      @id @default(autoincrement())
+  userId      Int
+  splitId     Int?
+  dayName     String
+  weekNumber  Int?
+  dayNumber   Int?
+  startedAt   DateTime                 @default(now())
+  completedAt DateTime?
+  notes       String?
+  posts       Post[]
+  split       Split?                   @relation(fields: [splitId], references: [id])
+  user        User                     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  exercises   WorkoutSessionExercise[]
+
+  @@index([completedAt])
+  @@index([userId])
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model WorkoutSessionExercise {
+  id                 Int               @id @default(autoincrement())
+  workoutSessionId   Int
+  exerciseName       String
   exerciseTemplateId Int?
-  template         ExerciseTemplate? @relation(fields: [exerciseTemplateId], references: [id], onDelete: SetNull)
-  orderIndex       Int
-  notes            String?
-  sets             WorkoutSet[]
+  orderIndex         Int
+  notes              String?
+  template           ExerciseTemplate? @relation(fields: [exerciseTemplateId], references: [id])
+  workoutSession     WorkoutSession    @relation(fields: [workoutSessionId], references: [id], onDelete: Cascade)
+  sets               WorkoutSet[]
 
   @@index([workoutSessionId])
 }
 
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model WorkoutSet {
   id                       Int                    @id @default(autoincrement())
   workoutSessionExerciseId Int
-  exercise                 WorkoutSessionExercise @relation(fields: [workoutSessionExerciseId], references: [id], onDelete: Cascade)
   setNumber                Int
   weight                   Float?
   reps                     Int?
   rpe                      Float?
   completed                Boolean                @default(false)
   completedAt              DateTime?
+  exercise                 WorkoutSessionExercise @relation(fields: [workoutSessionExerciseId], references: [id], onDelete: Cascade)
 
   @@index([workoutSessionExerciseId])
-}
-
-model Achievement {
-  id        Int      @id @default(autoincrement())
-  workoutId Int?
-  userId    Int
-  workout   Workout? @relation(fields: [workoutId], references: [id], onDelete: SetNull)
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  posts     Post[]
-
-  @@index([userId])
-}
-
-model Post {
-  id               Int             @id @default(autoincrement())
-  createdAt        DateTime        @default(now())
-  updatedAt        DateTime        @updatedAt
-  title            String?
-  description      String?
-  imageUrl         String?
-  published        Boolean         @default(false)
-  authorId         Int
-  author           User            @relation("UserPosts", fields: [authorId], references: [id], onDelete: Cascade)
-  workoutId        Int?
-  workout          Workout?        @relation(fields: [workoutId], references: [id], onDelete: SetNull)
-  workoutSessionId Int?
-  workoutSession   WorkoutSession? @relation(fields: [workoutSessionId], references: [id], onDelete: SetNull)
-  splitId          Int?
-  split            Split?          @relation(fields: [splitId], references: [id], onDelete: SetNull)
-  achievementId    Int?
-  achievement      Achievement?    @relation(fields: [achievementId], references: [id], onDelete: SetNull)
-  streak           Int?
-  likes            Like[]
-  comments         Comment[]
-
-  @@index([authorId])
-}
-
-model Comment {
-  id            Int          @id @default(autoincrement())
-  userId        Int
-  author        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-  content       String?
-  timestamp     DateTime     @default(now())
-  postId        Int?
-  post          Post?        @relation(fields: [postId], references: [id], onDelete: Cascade)
-  splitId       Int?
-  split         Split?       @relation(fields: [splitId], references: [id], onDelete: Cascade)
-
-  @@index([userId])
-}
-
-model Like {
-  id            Int          @id @default(autoincrement())
-  userId        Int
-  author        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-  timestamp     DateTime     @default(now())
-  postId        Int?
-  post          Post?        @relation(fields: [postId], references: [id], onDelete: Cascade)
-  splitId       Int?
-  split         Split?       @relation(fields: [splitId], references: [id], onDelete: Cascade)
-
-  @@index([userId])
 }
