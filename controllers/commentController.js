@@ -10,7 +10,15 @@ export const getCommentsByPostId = async (req, res) => {
           select: {
             id: true,
             username: true,
-            name: true
+            name: true,
+            firstName: true,
+            lastName: true,
+            profile: {
+              select: {
+                avatarUrl: true,
+                isVerified: true
+              }
+            }
           }
         }
       },
@@ -33,7 +41,15 @@ export const getCommentsBySplitId = async (req, res) => {
           select: {
             id: true,
             username: true,
-            name: true
+            name: true,
+            firstName: true,
+            lastName: true,
+            profile: {
+              select: {
+                avatarUrl: true,
+                isVerified: true
+              }
+            }
           }
         }
       },
@@ -56,7 +72,15 @@ export const getCommentsByUserId = async (req, res) => {
           select: {
             id: true,
             username: true,
-            name: true
+            name: true,
+            firstName: true,
+            lastName: true,
+            profile: {
+              select: {
+                avatarUrl: true,
+                isVerified: true
+              }
+            }
           }
         },
         post: {
@@ -90,7 +114,15 @@ export const getCommentById = async (req, res) => {
           select: {
             id: true,
             username: true,
-            name: true
+            name: true,
+            firstName: true,
+            lastName: true,
+            profile: {
+              select: {
+                avatarUrl: true,
+                isVerified: true
+              }
+            }
           }
         },
         post: {
@@ -136,7 +168,15 @@ export const createComment = async (req, res) => {
           select: {
             id: true,
             username: true,
-            name: true
+            name: true,
+            firstName: true,
+            lastName: true,
+            profile: {
+              select: {
+                avatarUrl: true,
+                isVerified: true
+              }
+            }
           }
         },
         post: {
@@ -175,7 +215,15 @@ export const updateComment = async (req, res) => {
           select: {
             id: true,
             username: true,
-            name: true
+            name: true,
+            firstName: true,
+            lastName: true,
+            profile: {
+              select: {
+                avatarUrl: true,
+                isVerified: true
+              }
+            }
           }
         },
         post: {

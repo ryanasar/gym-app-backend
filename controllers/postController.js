@@ -12,7 +12,21 @@ export const getPostsByUserId = async (req, res) => {
     const posts = await prisma.post.findMany({
       where: { authorId: parseInt(userId) },
       include: {
-        author: true,
+        author: {
+          select: {
+            id: true,
+            username: true,
+            name: true,
+            firstName: true,
+            lastName: true,
+            profile: {
+              select: {
+                avatarUrl: true,
+                isVerified: true
+              }
+            }
+          }
+        },
         workout: true,
         workoutSession: {
           include: {
@@ -65,7 +79,21 @@ export const getPostsByUserIds = async (req, res) => {
         authorId: { in: userIds.map(id => parseInt(id)) },
       },
       include: {
-        author: true,
+        author: {
+          select: {
+            id: true,
+            username: true,
+            name: true,
+            firstName: true,
+            lastName: true,
+            profile: {
+              select: {
+                avatarUrl: true,
+                isVerified: true
+              }
+            }
+          }
+        },
         workout: true,
         workoutSession: {
           include: {
@@ -113,7 +141,15 @@ export const getAllPosts = async (req, res) => {
           select: {
             id: true,
             username: true,
-            name: true
+            name: true,
+            firstName: true,
+            lastName: true,
+            profile: {
+              select: {
+                avatarUrl: true,
+                isVerified: true
+              }
+            }
           }
         },
         workout: true,
@@ -166,7 +202,15 @@ export const getPostById = async (req, res) => {
           select: {
             id: true,
             username: true,
-            name: true
+            name: true,
+            firstName: true,
+            lastName: true,
+            profile: {
+              select: {
+                avatarUrl: true,
+                isVerified: true
+              }
+            }
           }
         },
         workout: true,
@@ -231,7 +275,15 @@ export const createPost = async (req, res) => {
           select: {
             id: true,
             username: true,
-            name: true
+            name: true,
+            firstName: true,
+            lastName: true,
+            profile: {
+              select: {
+                avatarUrl: true,
+                isVerified: true
+              }
+            }
           }
         },
         workout: true,
@@ -288,7 +340,15 @@ export const updatePost = async (req, res) => {
           select: {
             id: true,
             username: true,
-            name: true
+            name: true,
+            firstName: true,
+            lastName: true,
+            profile: {
+              select: {
+                avatarUrl: true,
+                isVerified: true
+              }
+            }
           }
         },
         workout: true,
@@ -432,7 +492,15 @@ export const getFollowingPosts = async (req, res) => {
           select: {
             id: true,
             username: true,
-            name: true
+            name: true,
+            firstName: true,
+            lastName: true,
+            profile: {
+              select: {
+                avatarUrl: true,
+                isVerified: true
+              }
+            }
           }
         },
         workout: true,
