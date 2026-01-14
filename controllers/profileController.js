@@ -17,6 +17,8 @@ export const getProfileByUserId = async (req, res) => {
             id: true,
             email: true,
             name: true,
+            firstName: true,
+            lastName: true,
             username: true,
             createdAt: true,
             _count: {
@@ -98,6 +100,8 @@ export const getProfileByUsername = async (req, res) => {
         id: user.id,
         email: user.email,
         name: user.name,
+        firstName: user.firstName,
+        lastName: user.lastName,
         username: user.username,
         createdAt: user.createdAt,
         _count: user._count
@@ -114,7 +118,7 @@ export const getProfileByUsername = async (req, res) => {
  */
 export const createProfile = async (req, res) => {
   try {
-    const { userId, bio, isPrivate = false } = req.body;
+    const { userId, bio, isPrivate = false, avatarUrl } = req.body;
 
     // Check if user exists
     const user = await prisma.user.findUnique({
@@ -138,7 +142,8 @@ export const createProfile = async (req, res) => {
       data: {
         userId: parseInt(userId),
         bio,
-        isPrivate
+        isPrivate,
+        avatarUrl
       },
       include: {
         user: {
@@ -146,6 +151,8 @@ export const createProfile = async (req, res) => {
             id: true,
             email: true,
             name: true,
+            firstName: true,
+            lastName: true,
             username: true,
             createdAt: true
           }
@@ -166,7 +173,7 @@ export const createProfile = async (req, res) => {
 export const updateProfile = async (req, res) => {
   try {
     const { userId } = req.params;
-    const { bio, isPrivate } = req.body;
+    const { bio, isPrivate, avatarUrl } = req.body;
 
     // Check if profile exists
     const existingProfile = await prisma.profile.findUnique({
@@ -185,6 +192,7 @@ export const updateProfile = async (req, res) => {
     const updateData = {};
     if (bio !== undefined) updateData.bio = bio;
     if (isPrivate !== undefined) updateData.isPrivate = isPrivate;
+    if (avatarUrl !== undefined) updateData.avatarUrl = avatarUrl;
 
     const updatedProfile = await prisma.profile.update({
       where: { userId: parseInt(userId) },
@@ -195,6 +203,8 @@ export const updateProfile = async (req, res) => {
             id: true,
             email: true,
             name: true,
+            firstName: true,
+            lastName: true,
             username: true,
             createdAt: true
           }
@@ -268,6 +278,8 @@ export const getPublicProfiles = async (req, res) => {
           select: {
             id: true,
             name: true,
+            firstName: true,
+            lastName: true,
             username: true,
             createdAt: true,
             _count: {

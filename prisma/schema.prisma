@@ -140,11 +140,13 @@ model Post {
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model Profile {
-  id        Int      @id @default(autoincrement())
-  bio       String?
-  userId    Int      @unique
-  isPrivate Boolean?
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id         Int      @id @default(autoincrement())
+  bio        String?
+  userId     Int      @unique
+  isPrivate  Boolean?
+  avatarUrl  String?
+  isVerified Boolean  @default(false)
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
@@ -176,6 +178,8 @@ model User {
   supabaseId                         String?          @unique
   hasCompletedOnboarding             Boolean          @default(false)
   name                               String?
+  firstName                          String?
+  lastName                           String?
   username                           String?          @unique
   createdAt                          DateTime         @default(now())
   achievements                       Achievement[]

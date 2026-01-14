@@ -43,13 +43,17 @@ export const getUserByUsername = async (req, res) => {
           id: true,
           username: true,
           name: true,
+          firstName: true,
+          lastName: true,
           email: true,
           createdAt: true,
           workouts: { select: { id: true } },
           profile: {
             select: {
               bio: true,
-              isPrivate: true
+              isPrivate: true,
+              avatarUrl: true,
+              isVerified: true
             }
           },
           // Note: The relation names in the schema are inverted
@@ -90,17 +94,20 @@ export const getUserByUsername = async (req, res) => {
  */
 export const updateUserAndCreateProfile = async (req, res) => {
   const { supabaseId } = req.params;
-  const { name, username } = req.body;
+  const { name, username, firstName, lastName } = req.body;
 
   try {
+    const updateData = {};
+    if (name !== undefined) updateData.name = name;
+    if (username !== undefined) updateData.username = username;
+    if (firstName !== undefined) updateData.firstName = firstName;
+    if (lastName !== undefined) updateData.lastName = lastName;
+
     const user = await prisma.user.update({
       where: {
         supabaseId: supabaseId
       },
-      data: {
-        name: name,
-        username: username,
-      },
+      data: updateData,
     });
 
     // Create profile if it doesn't exist
@@ -285,9 +292,13 @@ export const getFollowers = async (req, res) => {
                 id: true,
                 username: true,
                 name: true,
+                firstName: true,
+                lastName: true,
                 profile: {
                   select: {
-                    bio: true
+                    bio: true,
+                    avatarUrl: true,
+                    isVerified: true
                   }
                 }
               }
@@ -329,9 +340,13 @@ export const getFollowing = async (req, res) => {
                 id: true,
                 username: true,
                 name: true,
+                firstName: true,
+                lastName: true,
                 profile: {
                   select: {
-                    bio: true
+                    bio: true,
+                    avatarUrl: true,
+                    isVerified: true
                   }
                 }
               }
@@ -409,7 +424,9 @@ export const searchUsers = async (req, res) => {
       where: {
         OR: [
           { username: { contains: query, mode: 'insensitive' } },
-          { name: { contains: query, mode: 'insensitive' } }
+          { name: { contains: query, mode: 'insensitive' } },
+          { firstName: { contains: query, mode: 'insensitive' } },
+          { lastName: { contains: query, mode: 'insensitive' } }
         ],
         hasCompletedOnboarding: true
       },
@@ -417,10 +434,14 @@ export const searchUsers = async (req, res) => {
         id: true,
         username: true,
         name: true,
+        firstName: true,
+        lastName: true,
         profile: {
           select: {
             bio: true,
-            isPrivate: true
+            isPrivate: true,
+            avatarUrl: true,
+            isVerified: true
           }
         },
         _count: {
