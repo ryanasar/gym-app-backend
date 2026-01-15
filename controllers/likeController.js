@@ -86,14 +86,19 @@ export const createLike = async (req, res) => {
     const postId = req.params.postId || req.body.postId;
     const { userId, splitId } = req.body;
 
+    // Build where clause - only include the field that's actually being used
+    const whereClause = {
+      userId: parseInt(userId)
+    };
+
+    if (postId) {
+      whereClause.postId = parseInt(postId);
+    } else if (splitId) {
+      whereClause.splitId = parseInt(splitId);
+    }
+
     const existingLike = await prisma.like.findFirst({
-      where: {
-        userId: parseInt(userId),
-        OR: [
-          { postId: postId ? parseInt(postId) : null },
-          { splitId: splitId ? parseInt(splitId) : null }
-        ]
-      }
+      where: whereClause
     });
 
     if (existingLike) {
@@ -174,14 +179,19 @@ export const toggleLike = async (req, res) => {
   try {
     const { userId, postId, splitId } = req.body;
 
+    // Build where clause - only include the field that's actually being used
+    const whereClause = {
+      userId: parseInt(userId)
+    };
+
+    if (postId) {
+      whereClause.postId = parseInt(postId);
+    } else if (splitId) {
+      whereClause.splitId = parseInt(splitId);
+    }
+
     const existingLike = await prisma.like.findFirst({
-      where: {
-        userId: parseInt(userId),
-        OR: [
-          { postId: postId ? parseInt(postId) : null },
-          { splitId: splitId ? parseInt(splitId) : null }
-        ]
-      }
+      where: whereClause
     });
 
     if (existingLike) {
