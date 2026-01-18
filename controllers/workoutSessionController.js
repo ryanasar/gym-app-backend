@@ -156,6 +156,7 @@ export const createWorkoutSession = async (req, res) => {
                 weight: set.weight ? parseFloat(set.weight) : null,
                 reps: set.reps ? parseInt(set.reps) : null,
                 rpe: set.rpe ? parseFloat(set.rpe) : null,
+                restSeconds: set.restSeconds ? parseInt(set.restSeconds) : null,
                 completed: set.completed || false,
                 completedAt: set.completed ? new Date() : null
               }))

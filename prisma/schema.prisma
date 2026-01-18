@@ -270,6 +270,7 @@ model WorkoutSet {
   weight                   Float?
   reps                     Int?
   rpe                      Float?
+  restSeconds              Int?
   completed                Boolean                @default(false)
   completedAt              DateTime?
   exercise                 WorkoutSessionExercise @relation(fields: [workoutSessionExerciseId], references: [id], onDelete: Cascade)
