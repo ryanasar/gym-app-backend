@@ -186,7 +186,7 @@ export const createSplit = async (req, res) => {
  */
 export const updateSplit = async (req, res) => {
   const { splitId } = req.params;
-  const { isPublic, numDays, name, emoji, description, started } = req.body;
+  const { isPublic, numDays, name, emoji, description, started, workoutDays } = req.body;
 
   try {
     const updateData = {};
@@ -197,12 +197,46 @@ export const updateSplit = async (req, res) => {
     if (description !== undefined) updateData.description = description;
     if (started !== undefined) updateData.started = started;
 
+    // Update basic split info
     const updatedSplit = await prisma.split.update({
       where: { id: parseInt(splitId) },
       data: updateData
     });
 
-    res.json(updatedSplit);
+    // If workoutDays are provided, update them
+    if (workoutDays && Array.isArray(workoutDays)) {
+      // Delete existing workout days
+      await prisma.workoutDay.deleteMany({
+        where: { splitId: parseInt(splitId) }
+      });
+
+      // Create new workout days
+      await prisma.workoutDay.createMany({
+        data: workoutDays.map(day => ({
+          splitId: parseInt(splitId),
+          dayIndex: day.dayIndex,
+          workoutName: day.workoutName,
+          workoutDescription: day.workoutDescription,
+          workoutType: day.workoutType,
+          emoji: day.emoji,
+          isRest: day.isRest,
+          exercises: day.exercises ? JSON.stringify(day.exercises) : null,
+          workoutId: day.workoutId || null
+        }))
+      });
+    }
+
+    // Fetch and return the updated split with workout days
+    const fullSplit = await prisma.split.findUnique({
+      where: { id: parseInt(splitId) },
+      include: {
+        workoutDays: {
+          orderBy: { dayIndex: 'asc' }
+        }
+      }
+    });
+
+    res.json(fullSplit);
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Failed to update split' });

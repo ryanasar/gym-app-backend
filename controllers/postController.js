@@ -44,6 +44,22 @@ export const getPostsByUserId = async (req, res) => {
             userId: true,
           }
         },
+        taggedUsers: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                username: true,
+                name: true,
+                profile: {
+                  select: {
+                    avatarUrl: true
+                  }
+                }
+              }
+            }
+          }
+        },
         _count: {
           select: {
             likes: true,
@@ -56,7 +72,13 @@ export const getPostsByUserId = async (req, res) => {
       },
     });
 
-    res.json(posts);
+    // Transform taggedUsers to flatten the structure
+    const transformedPosts = posts.map(post => ({
+      ...post,
+      taggedUsers: post.taggedUsers.map(tag => tag.user)
+    }));
+
+    res.json(transformedPosts);
   } catch (error) {
     console.error('Error getting posts by userId:', error);
     res.status(500).json({ error: 'Failed to get posts for this user' });
@@ -111,6 +133,22 @@ export const getPostsByUserIds = async (req, res) => {
             userId: true,
           }
         },
+        taggedUsers: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                username: true,
+                name: true,
+                profile: {
+                  select: {
+                    avatarUrl: true
+                  }
+                }
+              }
+            }
+          }
+        },
         _count: {
           select: {
             likes: true,
@@ -123,7 +161,13 @@ export const getPostsByUserIds = async (req, res) => {
       },
     });
 
-    res.json(posts);
+    // Transform taggedUsers to flatten the structure
+    const transformedPosts = posts.map(post => ({
+      ...post,
+      taggedUsers: post.taggedUsers.map(tag => tag.user)
+    }));
+
+    res.json(transformedPosts);
   } catch (error) {
     console.error('Error getting posts by userIds:', error);
     res.status(500).json({ error: 'Failed to get posts for these users' });
@@ -169,6 +213,22 @@ export const getAllPosts = async (req, res) => {
             userId: true,
           }
         },
+        taggedUsers: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                username: true,
+                name: true,
+                profile: {
+                  select: {
+                    avatarUrl: true
+                  }
+                }
+              }
+            }
+          }
+        },
         _count: {
           select: {
             likes: true,
@@ -181,7 +241,13 @@ export const getAllPosts = async (req, res) => {
       },
     });
 
-    res.json(posts);
+    // Transform taggedUsers to flatten the structure
+    const transformedPosts = posts.map(post => ({
+      ...post,
+      taggedUsers: post.taggedUsers.map(tag => tag.user)
+    }));
+
+    res.json(transformedPosts);
   } catch (error) {
     console.error('Error getting all posts:', error);
     res.status(500).json({ error: 'Failed to get posts' });
@@ -230,6 +296,22 @@ export const getPostById = async (req, res) => {
             userId: true,
           }
         },
+        taggedUsers: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                username: true,
+                name: true,
+                profile: {
+                  select: {
+                    avatarUrl: true
+                  }
+                }
+              }
+            }
+          }
+        },
         _count: {
           select: {
             likes: true,
@@ -243,7 +325,13 @@ export const getPostById = async (req, res) => {
       return res.status(404).json({ error: 'Post not found' });
     }
 
-    res.json(post);
+    // Transform taggedUsers to flatten the structure
+    const transformedPost = {
+      ...post,
+      taggedUsers: post.taggedUsers.map(tag => tag.user)
+    };
+
+    res.json(transformedPost);
   } catch (error) {
     console.error('Error getting post by ID:', error);
     res.status(500).json({ error: 'Failed to get post' });
@@ -254,7 +342,7 @@ export const getPostById = async (req, res) => {
  * CREATE post
  */
 export const createPost = async (req, res) => {
-  const { title, description, imageUrl, published, authorId, workoutId, workoutSessionId, splitId, achievementId, streak } = req.body;
+  const { title, description, imageUrl, published, authorId, workoutId, workoutSessionId, splitId, achievementId, streak, taggedUserIds } = req.body;
 
   try {
     const post = await prisma.post.create({
@@ -269,6 +357,11 @@ export const createPost = async (req, res) => {
         splitId: splitId ? parseInt(splitId) : null,
         achievementId: achievementId ? parseInt(achievementId) : null,
         streak: streak ? parseInt(streak) : null,
+        taggedUsers: taggedUserIds && taggedUserIds.length > 0 ? {
+          create: taggedUserIds.map(userId => ({
+            userId: parseInt(userId)
+          }))
+        } : undefined,
       },
       include: {
         author: {
@@ -303,6 +396,22 @@ export const createPost = async (req, res) => {
             userId: true,
           }
         },
+        taggedUsers: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                username: true,
+                name: true,
+                profile: {
+                  select: {
+                    avatarUrl: true
+                  }
+                }
+              }
+            }
+          }
+        },
         _count: {
           select: {
             likes: true,
@@ -312,7 +421,13 @@ export const createPost = async (req, res) => {
       },
     });
 
-    res.status(201).json(post);
+    // Transform taggedUsers to flatten the structure
+    const transformedPost = {
+      ...post,
+      taggedUsers: post.taggedUsers.map(tag => tag.user)
+    };
+
+    res.status(201).json(transformedPost);
   } catch (error) {
     console.error('Error creating post:', error);
     res.status(500).json({ error: 'Failed to create post' });
@@ -368,6 +483,22 @@ export const updatePost = async (req, res) => {
             userId: true,
           }
         },
+        taggedUsers: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                username: true,
+                name: true,
+                profile: {
+                  select: {
+                    avatarUrl: true
+                  }
+                }
+              }
+            }
+          }
+        },
         _count: {
           select: {
             likes: true,
@@ -377,7 +508,13 @@ export const updatePost = async (req, res) => {
       },
     });
 
-    res.json(post);
+    // Transform taggedUsers to flatten the structure
+    const transformedPost = {
+      ...post,
+      taggedUsers: post.taggedUsers.map(tag => tag.user)
+    };
+
+    res.json(transformedPost);
   } catch (error) {
     console.error('Error updating post:', error);
     res.status(500).json({ error: 'Failed to update post' });
@@ -520,6 +657,22 @@ export const getFollowingPosts = async (req, res) => {
             userId: true,
           }
         },
+        taggedUsers: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                username: true,
+                name: true,
+                profile: {
+                  select: {
+                    avatarUrl: true
+                  }
+                }
+              }
+            }
+          }
+        },
         _count: {
           select: {
             likes: true,
@@ -549,8 +702,14 @@ export const getFollowingPosts = async (req, res) => {
     const postsToReturn = hasMore ? posts.slice(0, -1) : posts;
     const nextCursor = hasMore ? postsToReturn[postsToReturn.length - 1].id : null;
 
+    // Transform taggedUsers to flatten the structure
+    const transformedPosts = postsToReturn.map(post => ({
+      ...post,
+      taggedUsers: post.taggedUsers.map(tag => tag.user)
+    }));
+
     res.json({
-      posts: postsToReturn,
+      posts: transformedPosts,
       nextCursor,
       hasMore
     });

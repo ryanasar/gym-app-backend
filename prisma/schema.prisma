@@ -10,10 +10,10 @@ datasource db {
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model Achievement {
   id        Int      @id @default(autoincrement())
-  workoutId Int?
   userId    Int
-  workout   Workout? @relation(fields: [workoutId], references: [id])
+  workoutId Int?
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  workout   Workout? @relation(fields: [workoutId], references: [id])
   posts     Post[]
 
   @@index([userId])
@@ -22,41 +22,41 @@ model Achievement {
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model Comment {
   id        Int      @id @default(autoincrement())
-  userId    Int
   content   String?
   timestamp DateTime @default(now())
   postId    Int?
+  userId    Int
   splitId   Int?
-  author    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   post      Post?    @relation(fields: [postId], references: [id], onDelete: Cascade)
   split     Split?   @relation(fields: [splitId], references: [id], onDelete: Cascade)
+  author    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
 }
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model Exercise {
-  id                 Int              @id @default(autoincrement())
-  workoutId          Int
-  exerciseTemplateId Int
   sets               Int?
   reps               Int?
   weight             Int?
-  workout            Workout          @relation(fields: [workoutId], references: [id], onDelete: Cascade)
+  id                 Int              @id @default(autoincrement())
+  workoutId          Int
+  exerciseTemplateId Int
   template           ExerciseTemplate @relation(fields: [exerciseTemplateId], references: [id])
+  workout            Workout          @relation(fields: [workoutId], references: [id], onDelete: Cascade)
   muscles            MuscleExercise[]
 }
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model ExerciseTemplate {
-  id                     Int                      @id @default(autoincrement())
-  name                   String                   @unique
-  description            String?
-  imageUrl               String?
-  equipment              String?
-  difficulty             String?
-  exercises              Exercise[]
-  muscles                MuscleExerciseTemplate[]
+  id                      Int                      @id @default(autoincrement())
+  name                    String                   @unique
+  description             String?
+  imageUrl                String?
+  equipment               String?
+  difficulty              String?
+  exercises               Exercise[]
+  muscles                 MuscleExerciseTemplate[]
   workoutSessionExercises WorkoutSessionExercise[]
 }
 
@@ -73,13 +73,13 @@ model Follows {
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model Like {
   id        Int      @id @default(autoincrement())
-  userId    Int
   timestamp DateTime @default(now())
   postId    Int?
+  userId    Int
   splitId   Int?
-  author    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   post      Post?    @relation(fields: [postId], references: [id], onDelete: Cascade)
   split     Split?   @relation(fields: [splitId], references: [id], onDelete: Cascade)
+  author    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
 }
@@ -96,8 +96,8 @@ model Muscle {
 model MuscleExercise {
   muscleId   Int
   exerciseId Int
-  muscle     Muscle   @relation(fields: [muscleId], references: [id], onDelete: Cascade)
   exercise   Exercise @relation(fields: [exerciseId], references: [id], onDelete: Cascade)
+  muscle     Muscle   @relation(fields: [muscleId], references: [id], onDelete: Cascade)
 
   @@id([muscleId, exerciseId])
 }
@@ -106,8 +106,8 @@ model MuscleExercise {
 model MuscleExerciseTemplate {
   muscleId           Int
   exerciseTemplateId Int
-  muscle             Muscle           @relation(fields: [muscleId], references: [id], onDelete: Cascade)
   exerciseTemplate   ExerciseTemplate @relation(fields: [exerciseTemplateId], references: [id], onDelete: Cascade)
+  muscle             Muscle           @relation(fields: [muscleId], references: [id], onDelete: Cascade)
 
   @@id([muscleId, exerciseTemplateId])
 }
@@ -129,6 +129,7 @@ model Post {
   imageUrl         String?
   comments         Comment[]
   likes            Like[]
+  taggedUsers      PostTag[]
   achievement      Achievement?    @relation(fields: [achievementId], references: [id])
   author           User            @relation("UserPosts", fields: [authorId], references: [id], onDelete: Cascade)
   split            Split?          @relation(fields: [splitId], references: [id])
@@ -136,6 +137,20 @@ model Post {
   workoutSession   WorkoutSession? @relation(fields: [workoutSessionId], references: [id])
 
   @@index([authorId])
+}
+
+/// Join table for tagged users in posts
+model PostTag {
+  id        Int      @id @default(autoincrement())
+  postId    Int
+  userId    Int
+  createdAt DateTime @default(now())
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user      User     @relation("TaggedInPosts", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([postId, userId])
+  @@index([postId])
+  @@index([userId])
 }
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
@@ -157,41 +172,42 @@ model Split {
   emoji           String?
   description     String?
   isPublic        Boolean?         @default(false)
-  started         Boolean          @default(false)
   numDays         Int?
   createdAt       DateTime         @default(now())
   updatedAt       DateTime         @updatedAt
+  started         Boolean          @default(false)
+  comments        Comment[]
+  likes           Like[]
+  Post            Post[]
   user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
   workoutDays     WorkoutDay[]
   workoutSessions WorkoutSession[]
-  likes           Like[]
-  comments        Comment[]
-  Post            Post[]
 
   @@index([userId])
 }
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model User {
-  id                                 Int              @id @default(autoincrement())
-  email                              String           @unique
-  supabaseId                         String?          @unique
-  hasCompletedOnboarding             Boolean          @default(false)
-  name                               String?
-  firstName                          String?
-  lastName                           String?
-  username                           String?          @unique
-  createdAt                          DateTime         @default(now())
-  achievements                       Achievement[]
-  comments                           Comment[]
-  followedBy                         Follows[]        @relation("Follows_followedByIdToUser")
-  following                          Follows[]        @relation("Follows_followingIdToUser")
-  likes                              Like[]
-  posts                              Post[]           @relation("UserPosts")
-  profile                            Profile?
-  splits                             Split[]
-  workouts                           Workout[]
-  workoutSessions                    WorkoutSession[]
+  email                  String           @unique
+  name                   String?
+  createdAt              DateTime         @default(now())
+  id                     Int              @id @default(autoincrement())
+  username               String?          @unique
+  supabaseId             String?          @unique
+  hasCompletedOnboarding Boolean          @default(false)
+  firstName              String?
+  lastName               String?
+  achievements           Achievement[]
+  comments               Comment[]
+  followedBy             Follows[]        @relation("Follows_followedByIdToUser")
+  following              Follows[]        @relation("Follows_followingIdToUser")
+  likes                  Like[]
+  posts                  Post[]           @relation("UserPosts")
+  taggedInPosts          PostTag[]        @relation("TaggedInPosts")
+  profile                Profile?
+  splits                 Split[]
+  workouts               Workout[]
+  workoutSessions        WorkoutSession[]
 
   @@index([username])
 }
@@ -215,16 +231,16 @@ model Workout {
 model WorkoutDay {
   id                 Int      @id @default(autoincrement())
   dayIndex           Int?
-  workoutName        String?
-  workoutDescription String?
-  workoutType        String?
-  emoji              String?
   isRest             Boolean? @default(false)
-  exercises          Json?
   workoutId          Int?
+  emoji              String?
+  exercises          Json?
   splitId            Int?
-  workout            Workout? @relation(fields: [workoutId], references: [id])
+  workoutDescription String?
+  workoutName        String?
+  workoutType        String?
   split              Split?   @relation(fields: [splitId], references: [id], onDelete: Cascade)
+  workout            Workout? @relation(fields: [workoutId], references: [id])
 }
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
@@ -276,4 +292,20 @@ model WorkoutSet {
   exercise                 WorkoutSessionExercise @relation(fields: [workoutSessionExerciseId], references: [id], onDelete: Cascade)
 
   @@index([workoutSessionExerciseId])
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model Notifications {
+  id           String    @id(map: "notifications_pkey") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  recipient_id String
+  actor_id     String
+  type         String
+  post_id      String?
+  comment_id   String?
+  is_read      Boolean?  @default(false)
+  created_at   DateTime? @default(now()) @db.Timestamptz(6)
+
+  @@index([recipient_id, created_at(sort: Desc)], map: "notifications_recipient_created_idx")
+  @@index([recipient_id, is_read], map: "notifications_recipient_read_idx")
 }
