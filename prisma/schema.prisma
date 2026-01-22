@@ -127,6 +127,7 @@ model Post {
   workoutSessionId Int?
   streak           Int?
   imageUrl         String?
+  isSplitCompleted Boolean         @default(false)
   comments         Comment[]
   likes            Like[]
   taggedUsers      PostTag[]

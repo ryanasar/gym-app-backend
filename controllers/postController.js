@@ -342,7 +342,7 @@ export const getPostById = async (req, res) => {
  * CREATE post
  */
 export const createPost = async (req, res) => {
-  const { title, description, imageUrl, published, authorId, workoutId, workoutSessionId, splitId, achievementId, streak, taggedUserIds } = req.body;
+  const { title, description, imageUrl, published, authorId, workoutId, workoutSessionId, splitId, achievementId, streak, isSplitCompleted, taggedUserIds } = req.body;
 
   try {
     const post = await prisma.post.create({
@@ -357,6 +357,7 @@ export const createPost = async (req, res) => {
         splitId: splitId ? parseInt(splitId) : null,
         achievementId: achievementId ? parseInt(achievementId) : null,
         streak: streak ? parseInt(streak) : null,
+        isSplitCompleted: isSplitCompleted || false,
         taggedUsers: taggedUserIds && taggedUserIds.length > 0 ? {
           create: taggedUserIds.map(userId => ({
             userId: parseInt(userId)
