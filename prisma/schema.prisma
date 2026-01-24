@@ -130,12 +130,12 @@ model Post {
   isSplitCompleted Boolean         @default(false)
   comments         Comment[]
   likes            Like[]
-  taggedUsers      PostTag[]
   achievement      Achievement?    @relation(fields: [achievementId], references: [id])
   author           User            @relation("UserPosts", fields: [authorId], references: [id], onDelete: Cascade)
   split            Split?          @relation(fields: [splitId], references: [id])
   workout          Workout?        @relation(fields: [workoutId], references: [id])
   workoutSession   WorkoutSession? @relation(fields: [workoutSessionId], references: [id])
+  taggedUsers      PostTag[]
 
   @@index([authorId])
 }
@@ -206,10 +206,11 @@ model User {
   posts                  Post[]           @relation("UserPosts")
   taggedInPosts          PostTag[]        @relation("TaggedInPosts")
   profile                Profile?
+  pushTokens             PushToken[]
+  savedWorkouts          SavedWorkout[]
   splits                 Split[]
   workouts               Workout[]
   workoutSessions        WorkoutSession[]
-  savedWorkouts          SavedWorkout[]
 
   @@index([username])
 }
@@ -225,7 +226,6 @@ model SavedWorkout {
   exercises   Json?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
@@ -305,9 +305,9 @@ model WorkoutSet {
   weight                   Float?
   reps                     Int?
   rpe                      Float?
-  restSeconds              Int?
   completed                Boolean                @default(false)
   completedAt              DateTime?
+  restSeconds              Int?
   exercise                 WorkoutSessionExercise @relation(fields: [workoutSessionExerciseId], references: [id], onDelete: Cascade)
 
   @@index([workoutSessionExerciseId])
@@ -327,4 +327,17 @@ model Notifications {
 
   @@index([recipient_id, created_at(sort: Desc)], map: "notifications_recipient_created_idx")
   @@index([recipient_id, is_read], map: "notifications_recipient_read_idx")
+}
+
+/// Store device push notification tokens for users
+model PushToken {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  token     String   @unique
+  platform  String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }

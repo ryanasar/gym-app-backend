@@ -18,8 +18,7 @@ dist/
 build/
 
 # Prisma generated files (client is okay to commit, migrations optionally)
-prisma/dev.db
-prisma/*.sqlite
+prisma/
 
 # If you want to ignore SQLite migrations (optional)
 # prisma/migrations/
