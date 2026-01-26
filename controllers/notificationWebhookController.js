@@ -7,6 +7,8 @@ const WEBHOOK_SECRET = process.env.WEBHOOK_SECRET;
  * Triggered when a new notification is inserted into the Notifications table
  */
 export const handleNotificationCreated = async (req, res) => {
+  console.log('[Webhook] Received:', JSON.stringify(req.body, null, 2));
+
   // Verify webhook secret
   const webhookSecret = req.headers['x-webhook-secret'];
 

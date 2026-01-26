@@ -5,14 +5,14 @@ const expo = new Expo();
 
 /**
  * Send push notifications to a user
- * @param {string} recipientSupabaseId - The Supabase ID of the recipient
+ * @param {string} recipientId - The user ID of the recipient
  * @param {object} notification - The notification data from DB
  */
-export const sendPushNotification = async (recipientSupabaseId, notification) => {
+export const sendPushNotification = async (recipientId, notification) => {
   try {
     // Get recipient user and their push tokens
     const recipient = await prisma.user.findUnique({
-      where: { supabaseId: recipientSupabaseId },
+      where: { id: parseInt(recipientId) },
       include: {
         pushTokens: true,
         profile: true
@@ -20,13 +20,13 @@ export const sendPushNotification = async (recipientSupabaseId, notification) =>
     });
 
     if (!recipient || recipient.pushTokens.length === 0) {
-      console.log('[Push] No push tokens found for user:', recipientSupabaseId);
+      console.log('[Push] No push tokens found for user:', recipientId);
       return;
     }
 
     // Get actor info for the notification message
     const actor = await prisma.user.findUnique({
-      where: { supabaseId: notification.actor_id },
+      where: { id: parseInt(notification.actor_id) },
       select: {
         username: true,
         firstName: true,
