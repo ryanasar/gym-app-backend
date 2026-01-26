@@ -101,25 +101,25 @@ const buildNotificationContent = (type, actor) => {
 
   const templates = {
     like: {
-      title: 'New Like',
+      title: 'Gymvy',
       body: `${actorName} liked your post`
     },
     comment: {
-      title: 'New Comment',
+      title: 'Gymvy',
       body: `${actorName} commented on your post`
     },
     follow: {
-      title: 'New Follower',
+      title: 'Gymvy',
       body: `${actorName} started following you`
     },
     tag: {
-      title: 'You were tagged',
+      title: 'Gymvy',
       body: `${actorName} tagged you in a post`
     }
   };
 
   return templates[type] || {
-    title: 'New Notification',
+    title: 'Gymvy',
     body: `${actorName} interacted with you`
   };
 };
