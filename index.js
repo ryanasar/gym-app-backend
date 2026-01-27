@@ -14,6 +14,7 @@ import commentRoutes from './routes/commentRoutes.js';
 import likeRoutes from './routes/likeRoutes.js';
 import achievementRoutes from './routes/achievementRoutes.js';
 import savedWorkoutRoutes from './routes/savedWorkoutRoutes.js';
+import customExerciseRoutes from './routes/customExerciseRoutes.js';
 import pushTokenRoutes from './routes/pushTokenRoutes.js';
 import webhookRoutes from './routes/webhookRoutes.js';
 
@@ -53,6 +54,8 @@ app.use('/api/likes', likeRoutes);
 app.use('/api/achievements', achievementRoutes);
 
 app.use('/api/saved-workouts', savedWorkoutRoutes);
+
+app.use('/api/custom-exercises', customExerciseRoutes);
 
 app.use('/api/push-tokens', pushTokenRoutes);
 

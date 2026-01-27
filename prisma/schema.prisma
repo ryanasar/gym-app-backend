@@ -211,6 +211,7 @@ model User {
   splits                 Split[]
   workouts               Workout[]
   workoutSessions        WorkoutSession[]
+  customExercises        CustomExercise[]
 
   @@index([username])
 }
@@ -229,6 +230,23 @@ model SavedWorkout {
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
+}
+
+/// Custom exercises created by users
+model CustomExercise {
+  id               Int      @id @default(autoincrement())
+  creatorUserId    Int
+  name             String
+  category         String?
+  primaryMuscles   String[]
+  secondaryMuscles String[]
+  equipment        String?
+  difficulty       String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  creator          User     @relation(fields: [creatorUserId], references: [id], onDelete: Cascade)
+
+  @@index([creatorUserId])
 }
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
