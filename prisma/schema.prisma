@@ -30,7 +30,21 @@ model Comment {
   post      Post?    @relation(fields: [postId], references: [id], onDelete: Cascade)
   split     Split?   @relation(fields: [splitId], references: [id], onDelete: Cascade)
   author    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  commentLikes CommentLike[]
 
+  @@index([userId])
+}
+
+model CommentLike {
+  id        Int      @id @default(autoincrement())
+  timestamp DateTime @default(now())
+  commentId Int
+  userId    Int
+  comment   Comment  @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([commentId, userId])
+  @@index([commentId])
   @@index([userId])
 }
 
@@ -212,6 +226,7 @@ model User {
   workouts               Workout[]
   workoutSessions        WorkoutSession[]
   customExercises        CustomExercise[]
+  commentLikes           CommentLike[]
 
   @@index([username])
 }

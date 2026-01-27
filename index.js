@@ -12,6 +12,7 @@ import exerciseTemplateRoutes from './routes/exerciseTemplateRoutes.js';
 import muscleRoutes from './routes/muscleRoutes.js';
 import commentRoutes from './routes/commentRoutes.js';
 import likeRoutes from './routes/likeRoutes.js';
+import commentLikeRoutes from './routes/commentLikeRoutes.js';
 import achievementRoutes from './routes/achievementRoutes.js';
 import savedWorkoutRoutes from './routes/savedWorkoutRoutes.js';
 import customExerciseRoutes from './routes/customExerciseRoutes.js';
@@ -50,6 +51,8 @@ app.use('/api/muscles', muscleRoutes);
 app.use('/api/comments', commentRoutes);
 
 app.use('/api/likes', likeRoutes);
+
+app.use('/api/comment-likes', commentLikeRoutes);
 
 app.use('/api/achievements', achievementRoutes);
 

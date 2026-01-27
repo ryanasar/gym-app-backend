@@ -3,6 +3,8 @@ import prisma from '../prismaClient.js';
 export const getCommentsByPostId = async (req, res) => {
   try {
     const { postId } = req.params;
+    const userId = req.query.userId ? parseInt(req.query.userId) : null;
+
     const comments = await prisma.comment.findMany({
       where: { postId: parseInt(postId) },
       include: {
@@ -20,11 +22,35 @@ export const getCommentsByPostId = async (req, res) => {
               }
             }
           }
-        }
+        },
+        _count: {
+          select: { commentLikes: true }
+        },
+        ...(userId ? {
+          commentLikes: {
+            where: { userId },
+            select: { id: true }
+          }
+        } : {})
       },
-      orderBy: { timestamp: 'desc' }
     });
-    res.json(comments);
+
+    // Sort: most likes first, then oldest first for ties
+    const sorted = comments
+      .map(c => ({
+        ...c,
+        likeCount: c._count.commentLikes,
+        isLikedByCurrentUser: userId ? c.commentLikes?.length > 0 : false,
+      }))
+      .sort((a, b) => {
+        if (b.likeCount !== a.likeCount) return b.likeCount - a.likeCount;
+        return new Date(a.timestamp) - new Date(b.timestamp);
+      });
+
+    // Clean up internal fields
+    const result = sorted.map(({ _count, commentLikes, ...rest }) => rest);
+
+    res.json(result);
   } catch (error) {
     console.error('Error fetching comments:', error);
     res.status(500).json({ error: 'Failed to fetch comments' });

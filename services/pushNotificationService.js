@@ -115,6 +115,10 @@ const buildNotificationContent = (type, actor) => {
     tag: {
       title: 'Gymvy',
       body: `${actorName} tagged you in a post`
+    },
+    comment_like: {
+      title: 'Gymvy',
+      body: `${actorName} liked your comment`
     }
   };
 
