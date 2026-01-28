@@ -18,6 +18,7 @@ import savedWorkoutRoutes from './routes/savedWorkoutRoutes.js';
 import customExerciseRoutes from './routes/customExerciseRoutes.js';
 import pushTokenRoutes from './routes/pushTokenRoutes.js';
 import webhookRoutes from './routes/webhookRoutes.js';
+import bodyWeightRoutes from './routes/bodyWeightRoutes.js';
 
 const app = express();
 const prisma = new PrismaClient();
@@ -63,6 +64,8 @@ app.use('/api/custom-exercises', customExerciseRoutes);
 app.use('/api/push-tokens', pushTokenRoutes);
 
 app.use('/api/webhooks', webhookRoutes);
+
+app.use('/api/body-weights', bodyWeightRoutes);
 
 app.use((err, req, res, next) => {
   console.error(err.stack);

@@ -227,6 +227,7 @@ model User {
   workoutSessions        WorkoutSession[]
   customExercises        CustomExercise[]
   commentLikes           CommentLike[]
+  bodyWeights            BodyWeight[]
 
   @@index([username])
 }
@@ -360,6 +361,20 @@ model Notifications {
 
   @@index([recipient_id, created_at(sort: Desc)], map: "notifications_recipient_created_idx")
   @@index([recipient_id, is_read], map: "notifications_recipient_read_idx")
+}
+
+/// Body weight tracking entries
+model BodyWeight {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  weight    Float
+  date      DateTime @db.Date
+  createdAt DateTime @default(now())
+  notes     String?
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, date])
+  @@index([userId])
 }
 
 /// Store device push notification tokens for users
